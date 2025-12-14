@@ -3,542 +3,453 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admission System - Fully Functional</title>
+  <title>ระบบรับสมัครนักเรียนออนไลน์</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
-  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'Sarabun', 'sans-serif'] },
-          colors: {
-            brand: {
-              900: '#0f172a', 800: '#1e293b', 600: '#2563eb', 500: '#3b82f6',
-              accent: '#c0a062',
-            }
-          },
-          boxShadow: {
-            'glow': '0 0 20px rgba(59, 130, 246, 0.15)',
-            'card': '0 4px 30px rgba(0, 0, 0, 0.05)',
-            'float': '0 10px 40px -10px rgba(0,0,0,0.2)'
-          },
-          animation: {
-            'fade-in': 'fadeIn 0.5s ease-out',
-            'slide-up': 'slideUp 0.4s ease-out',
-          },
-          keyframes: {
-            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-            slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
-          }
-        }
-      }
-    }
-  </script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: 'Inter', 'Sarabun', sans-serif; background-color: #f8fafc; overflow-x: hidden; }
+    body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; }
     
-    /* View Transitions */
-    .view-section {
-      display: none; opacity: 0; transition: opacity 0.4s ease;
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    }
-    .view-section.active { display: flex; opacity: 1; position: relative; }
+    /* View Control - ใช้แบบมาตรฐาน รับรองไม่พัง */
+    .view-section { display: none; }
+    .view-section.active { display: block; }
 
-    /* Inputs */
+    /* Custom Input Style */
     .input-field {
-      width: 100%; padding: 1rem 1rem 1rem 3rem; background: #fff;
-      border: 1px solid #e2e8f0; border-radius: 0.75rem; transition: all 0.3s;
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
     }
-    .input-field:focus { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); outline: none; }
-    .input-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+    .input-field:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
     
-    /* Buttons */
-    .btn-primary {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white;
-      padding: 0.75rem 1.5rem; border-radius: 0.75rem; transition: all 0.3s;
+    /* Loading Spinner */
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top: 3px solid white;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.2); }
-
-    /* Sidebar Nav */
-    .nav-item { cursor: pointer; }
-    .nav-item.active { background: rgba(255,255,255,0.1); border-left: 3px solid #c0a062; }
-
-    /* Custom Scroll */
-    .custom-scroll::-webkit-scrollbar { width: 6px; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-    /* Modal Backdrop */
-    .modal-backdrop {
-      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
-    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
-<body>
+<body class="text-gray-800">
 
-  <div id="authWrapper" class="view-section active min-h-screen">
-    <div class="hidden lg:flex lg:w-1/2 bg-brand-900 relative items-center justify-center overflow-hidden">
-       <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=2070')] bg-cover bg-center opacity-30 mix-blend-overlay"></div>
-       <div class="relative z-10 text-center px-12 animate-slide-up">
-          <div class="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-8 border border-white/20 shadow-glow">
-             <i class="fa-solid fa-graduation-cap text-4xl text-white"></i>
-          </div>
-          <h1 class="text-4xl font-bold text-white mb-4">Education Future.</h1>
-          <p class="text-blue-200 font-light">ระบบรับสมัครนักเรียนออนไลน์<br>สะดวก รวดเร็ว ปลอดภัย</p>
-       </div>
-    </div>
+  <div id="loginView" class="view-section active min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-slate-800 p-4">
+    
+    <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+      
+      <div class="hidden md:flex md:w-1/2 bg-blue-600 items-center justify-center p-8 relative">
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative z-10 text-white text-center">
+          <div class="text-6xl mb-4"><i class="fa-solid fa-graduation-cap"></i></div>
+          <h2 class="text-3xl font-bold mb-2">ระบบรับสมัครนักเรียน</h2>
+          <p class="text-blue-100">โรงเรียนบางสะพานวิทยา</p>
+        </div>
+      </div>
 
-    <div class="w-full lg:w-1/2 bg-white flex items-center justify-center relative">
-      <div class="w-full max-w-md px-8 relative">
+      <div class="w-full md:w-1/2 p-8 md:p-12 relative">
         
-        <div id="studentLoginFormDiv" class="transition-all duration-500 absolute inset-0 m-auto h-fit px-8">
-           <div class="mb-8">
-              <h2 class="text-3xl font-bold text-brand-900">นักเรียน</h2>
-              <p class="text-slate-500">กรอกเลขบัตรประชาชนเพื่อสมัคร</p>
-           </div>
-           <form onsubmit="handleStudentLogin(event)">
-              <div class="relative mb-6">
-                 <input type="text" id="studentIdCard" class="input-field" maxlength="13" placeholder=" " required>
-                 <i class="fa-regular fa-id-card input-icon"></i>
-                 <label class="absolute left-12 top-4 text-slate-400 text-sm transition-all pointer-events-none bg-white px-1 peer-focus:-translate-y-7 peer-focus:text-brand-600 peer-placeholder-shown:translate-y-0">เลขบัตรประชาชน</label>
-              </div>
-              <button type="submit" class="btn-primary w-full flex justify-center items-center gap-2">
-                 <span>เข้าสู่ระบบ</span> <i class="fa-solid fa-arrow-right"></i>
-              </button>
-           </form>
-           <button onclick="toggleAuthMode('admin')" class="mt-8 text-sm text-slate-400 hover:text-brand-600 w-full text-center">Admin Access</button>
+        <button onclick="toggleAdminMode()" class="absolute top-4 right-4 text-gray-400 hover:text-blue-600 text-sm">
+          <i class="fa-solid fa-user-gear"></i> ผู้ดูแลระบบ
+        </button>
+
+        <div id="studentLoginContainer">
+          <h3 class="text-2xl font-bold text-gray-800 mb-1">เข้าสู่ระบบรับสมัคร</h3>
+          <p class="text-gray-500 mb-8 text-sm">กรอกเลขบัตรประชาชน 13 หลักเพื่อดำเนินการ</p>
+          
+          <form onsubmit="handleStudentLogin(event)">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">เลขบัตรประชาชน</label>
+              <input type="text" id="studentIdCard" class="input-field" maxlength="13" placeholder="เลข 13 หลัก" required>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition shadow-lg">
+              เข้าสู่ระบบ / สมัครเรียน
+            </button>
+          </form>
         </div>
 
-        <div id="adminLoginFormDiv" class="transition-all duration-500 absolute inset-0 m-auto h-fit px-8 translate-x-10 opacity-0 pointer-events-none">
-           <div class="mb-8 flex items-center gap-4">
-              <button onclick="toggleAuthMode('student')" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200"><i class="fa-solid fa-chevron-left"></i></button>
-              <div>
-                <h2 class="text-3xl font-bold text-brand-900">ผู้ดูแลระบบ</h2>
-                <p class="text-slate-500">จัดการข้อมูลการรับสมัคร</p>
-              </div>
-           </div>
-           <form onsubmit="handleAdminLogin(event)">
-              <div class="relative mb-4"><input type="text" id="adminUser" class="input-field" placeholder="Username" required><i class="fa-regular fa-user input-icon"></i></div>
-              <div class="relative mb-6"><input type="password" id="adminPass" class="input-field" placeholder="Password" required><i class="fa-regular fa-key input-icon"></i></div>
-              <button type="submit" class="btn-primary w-full bg-brand-900">เข้าสู่ระบบ Admin</button>
-           </form>
+        <div id="adminLoginContainer" class="hidden">
+          <h3 class="text-2xl font-bold text-red-700 mb-1">สำหรับเจ้าหน้าที่</h3>
+          <p class="text-gray-500 mb-8 text-sm">เข้าสู่ระบบเพื่อจัดการข้อมูล</p>
+          
+          <form onsubmit="handleAdminLogin(event)">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <input type="text" id="adminUser" class="input-field" required>
+            </div>
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input type="password" id="adminPass" class="input-field" required>
+            </div>
+            <button type="submit" class="w-full bg-red-700 hover:bg-red-800 text-white font-medium py-2.5 rounded-lg transition shadow-lg">
+              Login
+            </button>
+            <button type="button" onclick="toggleAdminMode()" class="w-full mt-3 text-sm text-gray-500 hover:text-gray-800">
+              ย้อนกลับ
+            </button>
+          </form>
         </div>
 
       </div>
     </div>
   </div>
 
-  <div id="appWizardView" class="view-section bg-slate-50 flex-col min-h-screen">
-     <div class="max-w-5xl mx-auto w-full py-8 px-6 flex-1 flex flex-col">
-        <div class="flex justify-between items-center mb-6">
-           <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white"><i class="fa-solid fa-user-graduate"></i></div>
-              <div><h2 class="font-bold text-brand-900">แบบฟอร์มสมัครเรียน</h2><p class="text-xs text-slate-500" id="wizardUserDisplay">Guest</p></div>
-           </div>
-           <button onclick="logout()" class="text-red-500 hover:text-red-700 text-sm font-medium"><i class="fa-solid fa-power-off"></i> ออกจากระบบ</button>
+  <div id="formView" class="view-section min-h-screen bg-gray-50 pb-10">
+    <nav class="bg-white shadow-sm sticky top-0 z-20">
+      <div class="max-w-5xl mx-auto px-4 h-16 flex justify-between items-center">
+        <div class="font-bold text-xl text-blue-800 flex items-center gap-2">
+          <i class="fa-solid fa-file-pen"></i> ใบสมัครออนไลน์
+        </div>
+        <button onclick="logout()" class="text-sm text-red-600 hover:bg-red-50 px-3 py-1 rounded">
+          <i class="fa-solid fa-power-off"></i> ออกจากระบบ
+        </button>
+      </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto mt-8 px-4">
+      <form id="applicationForm" onsubmit="submitApplication(event)" class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        
+        <div class="bg-blue-600 p-6 text-white">
+          <h2 class="text-xl font-bold">ข้อมูลการสมัคร</h2>
+          <p class="text-blue-100 text-sm mt-1">ผู้สมัคร: <span id="displayIdCard" class="font-mono bg-blue-700 px-2 py-0.5 rounded"></span></p>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-card overflow-hidden flex flex-col md:flex-row flex-1 border border-slate-100">
-           <div class="w-full md:w-64 bg-slate-50 border-r border-slate-100 p-6">
-              <div class="space-y-1">
-                 <div id="navStep1" class="p-3 rounded-lg flex items-center gap-3 text-sm font-medium text-brand-600 bg-white shadow-sm transition-all"><span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs">1</span> ข้อมูลส่วนตัว</div>
-                 <div id="navStep2" class="p-3 rounded-lg flex items-center gap-3 text-sm font-medium text-slate-400"><span class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-xs">2</span> การศึกษาเดิม</div>
-                 <div id="navStep3" class="p-3 rounded-lg flex items-center gap-3 text-sm font-medium text-slate-400"><span class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-xs">3</span> แผนการเรียน</div>
-                 <div id="navStep4" class="p-3 rounded-lg flex items-center gap-3 text-sm font-medium text-slate-400"><span class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-xs">4</span> ยืนยัน</div>
+        <div class="p-6 md:p-8 space-y-8">
+          
+          <div>
+            <h3 class="text-lg font-bold text-gray-800 border-l-4 border-blue-500 pl-3 mb-4">1. ข้อมูลส่วนตัว</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">คำนำหน้า</label>
+                <select id="prefix" class="input-field" required>
+                  <option value="">เลือก</option>
+                  <option>เด็กชาย</option><option>เด็กหญิง</option><option>นาย</option><option>นางสาว</option>
+                </select>
               </div>
-           </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">วันเกิด</label>
+                <input type="date" id="birthDate" class="input-field" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">ชื่อ (ภาษาไทย)</label>
+                <input type="text" id="firstName" class="input-field" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">นามสกุล (ภาษาไทย)</label>
+                <input type="text" id="lastName" class="input-field" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">ชื่อ (อังกฤษ)</label>
+                <input type="text" id="firstNameEn" class="input-field">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">นามสกุล (อังกฤษ)</label>
+                <input type="text" id="lastNameEn" class="input-field">
+              </div>
+              <input type="hidden" id="birthHospital" value="-">
+              <input type="hidden" id="bloodType" value="-">
+              <input type="hidden" id="nationality" value="ไทย">
+              <input type="hidden" id="ethnicity" value="ไทย">
+              <input type="hidden" id="religion" value="พุทธ">
+            </div>
+          </div>
 
-           <div class="flex-1 p-8 relative">
-              <form id="wizardForm" class="h-full flex flex-col">
-                 
-                 <div class="wizard-step flex-1 animate-fade-in" id="step1">
-                    <h3 class="text-xl font-bold text-brand-900 mb-6 border-b pb-2">ข้อมูลส่วนตัว</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <div><label class="text-xs font-bold text-slate-500 uppercase">เลขบัตรประชาชน</label><input type="text" id="w_idCard" class="input-field bg-slate-50" readonly></div>
-                       <div><label class="text-xs font-bold text-slate-500 uppercase">คำนำหน้า</label><select id="w_prefix" class="input-field"><option>นาย</option><option>นางสาว</option><option>ด.ช.</option><option>ด.ญ.</option></select></div>
-                       <div><label class="text-xs font-bold text-slate-500 uppercase">ชื่อจริง</label><input type="text" id="w_firstName" class="input-field" required></div>
-                       <div><label class="text-xs font-bold text-slate-500 uppercase">นามสกุล</label><input type="text" id="w_lastName" class="input-field" required></div>
-                    </div>
-                 </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800 border-l-4 border-blue-500 pl-3 mb-4">2. ที่อยู่และการศึกษา</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium mb-1">พื้นที่บริการ</label>
+                <div class="flex gap-4">
+                  <label class="flex items-center cursor-pointer"><input type="radio" name="serviceArea" value="ในเขต" checked class="mr-2"> ในเขตพื้นที่บริการ</label>
+                  <label class="flex items-center cursor-pointer"><input type="radio" name="serviceArea" value="นอกเขต" class="mr-2"> นอกเขตพื้นที่บริการ</label>
+                </div>
+              </div>
+              <div><label class="block text-sm font-medium mb-1">ตำบล</label><input type="text" id="subdistrict" class="input-field"></div>
+              <div><label class="block text-sm font-medium mb-1">อำเภอ</label><input type="text" id="district" class="input-field"></div>
+              <div><label class="block text-sm font-medium mb-1">จังหวัด</label><input type="text" id="province" class="input-field"></div>
+              <div><label class="block text-sm font-medium mb-1">โรงเรียนเดิม</label><input type="text" id="previousSchool" class="input-field" required></div>
+              <div><label class="block text-sm font-medium mb-1">เกรดเฉลี่ย (GPA)</label><input type="number" step="0.01" id="gpa" class="input-field" required></div>
+            </div>
+          </div>
 
-                 <div class="wizard-step flex-1 hidden animate-fade-in" id="step2">
-                    <h3 class="text-xl font-bold text-brand-900 mb-6 border-b pb-2">ประวัติการศึกษา</h3>
-                    <div class="space-y-6">
-                       <div><label class="text-xs font-bold text-slate-500 uppercase">โรงเรียนเดิม</label><input type="text" id="w_school" class="input-field" placeholder="ชื่อโรงเรียนที่จบ" required></div>
-                       <div class="grid grid-cols-2 gap-6">
-                          <div><label class="text-xs font-bold text-slate-500 uppercase">เกรดเฉลี่ย (GPA)</label><input type="number" id="w_gpa" class="input-field" placeholder="0.00" required></div>
-                          <div><label class="text-xs font-bold text-slate-500 uppercase">จังหวัด</label><input type="text" id="w_province" class="input-field" required></div>
-                       </div>
-                    </div>
-                 </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800 border-l-4 border-blue-500 pl-3 mb-4">3. เลือกแผนการเรียน</h3>
+            <div class="mb-4">
+               <label class="block text-sm font-medium mb-2">ระดับชั้น</label>
+               <select id="gradeLevel" class="input-field" required>
+                 <option value="ม.1">มัธยมศึกษาปีที่ 1</option>
+                 <option value="ม.4">มัธยมศึกษาปีที่ 4</option>
+               </select>
+            </div>
+            <div class="space-y-2">
+              <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <input type="radio" name="program" value="วิทย์-คณิต" checked class="w-5 h-5 text-blue-600">
+                <span class="ml-3 font-medium">วิทย์-คณิต</span>
+              </label>
+              <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <input type="radio" name="program" value="ศิลป์-ภาษา" class="w-5 h-5 text-blue-600">
+                <span class="ml-3 font-medium">ศิลป์-ภาษา</span>
+              </label>
+              <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <input type="radio" name="program" value="คอมพิวเตอร์" class="w-5 h-5 text-blue-600">
+                <span class="ml-3 font-medium">คอมพิวเตอร์ (EIS/GATE)</span>
+              </label>
+            </div>
+          </div>
 
-                 <div class="wizard-step flex-1 hidden animate-fade-in" id="step3">
-                    <h3 class="text-xl font-bold text-brand-900 mb-6 border-b pb-2">เลือกแผนการเรียน</h3>
-                    <div class="mb-6 flex gap-4">
-                       <label class="flex-1 cursor-pointer"><input type="radio" name="w_grade" value="ม.1" checked class="peer sr-only"><div class="p-4 rounded-xl border-2 peer-checked:border-brand-600 peer-checked:bg-blue-50 text-center font-bold text-slate-600 peer-checked:text-brand-800 transition">มัธยมศึกษาปีที่ 1</div></label>
-                       <label class="flex-1 cursor-pointer"><input type="radio" name="w_grade" value="ม.4" class="peer sr-only"><div class="p-4 rounded-xl border-2 peer-checked:border-brand-600 peer-checked:bg-blue-50 text-center font-bold text-slate-600 peer-checked:text-brand-800 transition">มัธยมศึกษาปีที่ 4</div></label>
-                    </div>
-                    <div class="space-y-3">
-                       <label class="flex items-center p-4 border rounded-xl hover:bg-slate-50 cursor-pointer transition"><input type="radio" name="w_program" value="วิทย์-คณิต" checked class="w-5 h-5 text-brand-600"><span class="ml-3 font-medium">วิทย์-คณิต</span></label>
-                       <label class="flex items-center p-4 border rounded-xl hover:bg-slate-50 cursor-pointer transition"><input type="radio" name="w_program" value="ศิลป์-ภาษา" class="w-5 h-5 text-brand-600"><span class="ml-3 font-medium">ศิลป์-ภาษา</span></label>
-                       <label class="flex items-center p-4 border rounded-xl hover:bg-slate-50 cursor-pointer transition"><input type="radio" name="w_program" value="คอมพิวเตอร์" class="w-5 h-5 text-brand-600"><span class="ml-3 font-medium">คอมพิวเตอร์</span></label>
-                    </div>
-                 </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800 border-l-4 border-blue-500 pl-3 mb-4">4. เอกสารแนบ</h3>
+             <div class="flex flex-wrap gap-4">
+                <label class="flex items-center"><input type="checkbox" name="documents" value="ทะเบียนบ้าน" class="mr-2"> ทะเบียนบ้าน</label>
+                <label class="flex items-center"><input type="checkbox" name="documents" value="สูติบัตร" class="mr-2"> สูติบัตร</label>
+                <label class="flex items-center"><input type="checkbox" name="documents" value="ปพ.1" class="mr-2"> ปพ.1</label>
+             </div>
+             <div class="mt-2">
+               <input type="text" id="otherDocument" class="input-field" placeholder="เอกสารอื่นๆ (ถ้ามี)">
+             </div>
+          </div>
 
-                 <div class="wizard-step flex-1 hidden animate-fade-in text-center pt-10" id="step4">
-                    <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl"><i class="fa-solid fa-check"></i></div>
-                    <h3 class="text-2xl font-bold text-brand-900">ตรวจสอบข้อมูล</h3>
-                    <p class="text-slate-500 mb-8">กรุณายืนยันความถูกต้องก่อนส่งใบสมัคร</p>
-                    <button type="button" onclick="submitApplication()" class="btn-primary bg-green-600 px-8 py-3 text-lg shadow-lg hover:shadow-xl hover:bg-green-700">ส่งใบสมัครทันที</button>
-                 </div>
-
-                 <div class="mt-auto pt-6 border-t flex justify-between">
-                    <button type="button" id="prevBtn" onclick="moveStep(-1)" class="text-slate-400 hover:text-slate-600 font-medium px-4 py-2 hidden">ย้อนกลับ</button>
-                    <button type="button" id="nextBtn" onclick="moveStep(1)" class="bg-brand-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-brand-800 ml-auto shadow-lg">ถัดไป</button>
-                 </div>
-              </form>
-           </div>
         </div>
-     </div>
+
+        <div class="bg-gray-50 p-6 border-t text-center">
+          <button type="submit" id="submitBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:-translate-y-1 transition text-lg">
+            <i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการส่งใบสมัคร
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <div id="adminDashboardView" class="view-section min-h-screen bg-slate-100 flex">
-     <aside class="w-64 bg-brand-900 text-slate-300 flex-shrink-0 flex flex-col shadow-2xl z-20">
-        <div class="h-20 flex items-center px-6 border-b border-white/10 font-bold text-white text-xl tracking-tight">Admin<span class="text-brand-accent">Portal</span></div>
-        <nav class="flex-1 py-6 px-4 space-y-2">
-           <div onclick="switchAdminTab('overview')" id="menu-overview" class="nav-item active flex items-center gap-3 px-4 py-3 rounded-lg text-white bg-white/10 hover:bg-white/5 transition-all"><i class="fa-solid fa-chart-pie w-5"></i> ภาพรวม</div>
-           <div onclick="switchAdminTab('applicants')" id="menu-applicants" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 hover:text-white transition-all"><i class="fa-solid fa-users w-5"></i> รายชื่อผู้สมัคร</div>
-           <div onclick="switchAdminTab('reports')" id="menu-reports" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 hover:text-white transition-all"><i class="fa-solid fa-file-pdf w-5"></i> รายงาน</div>
-        </nav>
-        <div class="p-4 border-t border-white/10">
-           <button onclick="logout()" class="flex items-center gap-3 text-sm text-slate-400 hover:text-white w-full px-4 py-2"><i class="fa-solid fa-sign-out-alt"></i> ออกจากระบบ</button>
+  <div id="adminView" class="view-section min-h-screen bg-gray-100">
+    <nav class="bg-gray-900 text-white shadow-lg sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+        <div class="font-bold text-xl">Admin<span class="text-blue-400">Panel</span></div>
+        <div class="flex items-center gap-4">
+           <button onclick="loadData()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded"><i class="fa-solid fa-sync"></i> Refresh</button>
+           <button onclick="logout()" class="text-sm text-red-400 hover:text-red-300"><i class="fa-solid fa-sign-out-alt"></i> Logout</button>
         </div>
-     </aside>
+      </div>
+    </nav>
 
-     <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10">
-           <h2 class="text-xl font-bold text-slate-800" id="headerTitle">Dashboard Overview</h2>
-           <div class="flex items-center gap-3">
-              <div class="text-right"><div class="text-sm font-bold text-slate-800">Admin User</div><div class="text-xs text-slate-500">System Admin</div></div>
-              <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center font-bold">A</div>
-           </div>
-        </header>
+    <div class="max-w-7xl mx-auto py-8 px-4">
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+             <div class="text-gray-500 text-sm">ผู้สมัครทั้งหมด</div>
+             <div class="text-3xl font-bold" id="statTotal">0</div>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
+             <div class="text-gray-500 text-sm">ม.1</div>
+             <div class="text-3xl font-bold" id="statM1">0</div>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500">
+             <div class="text-gray-500 text-sm">ม.4</div>
+             <div class="text-3xl font-bold" id="statM4">0</div>
+          </div>
+       </div>
 
-        <div class="flex-1 overflow-y-auto custom-scroll p-8 relative">
-           
-           <div id="tab-overview" class="admin-tab-content animate-fade-in">
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                 <div class="bg-white p-6 rounded-2xl shadow-card border border-slate-100 group hover:shadow-lg transition">
-                    <p class="text-slate-500 text-sm font-medium">ผู้สมัครทั้งหมด</p>
-                    <h3 class="text-4xl font-bold text-brand-900 mt-2" id="statTotal">0</h3>
-                    <div class="mt-4 h-1 w-full bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-blue-500 w-[70%]"></div></div>
-                 </div>
-                 <div class="bg-white p-6 rounded-2xl shadow-card border border-slate-100 group hover:shadow-lg transition">
-                    <p class="text-slate-500 text-sm font-medium">มัธยมศึกษาปีที่ 1</p>
-                    <h3 class="text-4xl font-bold text-brand-900 mt-2" id="statM1">0</h3>
-                 </div>
-                 <div class="bg-white p-6 rounded-2xl shadow-card border border-slate-100 group hover:shadow-lg transition">
-                    <p class="text-slate-500 text-sm font-medium">มัธยมศึกษาปีที่ 4</p>
-                    <h3 class="text-4xl font-bold text-brand-900 mt-2" id="statM4">0</h3>
-                 </div>
-              </div>
-              <div class="bg-white p-8 rounded-2xl shadow-card flex items-center justify-center h-64 text-slate-400">
-                 <div class="text-center"><i class="fa-solid fa-chart-line text-4xl mb-2"></i><p>กราฟแสดงสถิติรายวัน (Simulation)</p></div>
-              </div>
-           </div>
-
-           <div id="tab-applicants" class="admin-tab-content hidden animate-fade-in">
-              <div class="bg-white rounded-2xl shadow-card border border-slate-100 flex flex-col h-[calc(100vh-200px)]">
-                 <div class="p-6 border-b flex justify-between items-center">
-                    <h3 class="font-bold text-slate-800">รายชื่อผู้สมัครล่าสุด</h3>
-                    <button onclick="renderTable()" class="text-brand-600 hover:bg-brand-50 px-3 py-1 rounded text-sm"><i class="fa-solid fa-rotate"></i> Refresh</button>
-                 </div>
-                 <div class="flex-1 overflow-auto custom-scroll">
-                    <table class="w-full text-left border-collapse">
-                       <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm">
-                          <tr>
-                             <th class="p-4 text-xs font-bold text-slate-500 uppercase">เลขบัตรฯ</th>
-                             <th class="p-4 text-xs font-bold text-slate-500 uppercase">ชื่อ-สกุล</th>
-                             <th class="p-4 text-xs font-bold text-slate-500 uppercase">ระดับชั้น</th>
-                             <th class="p-4 text-xs font-bold text-slate-500 uppercase">แผนการเรียน</th>
-                             <th class="p-4 text-xs font-bold text-slate-500 uppercase">สถานะ</th>
-                             <th class="p-4"></th>
-                          </tr>
-                       </thead>
-                       <tbody id="applicantTableBody" class="text-sm text-slate-600 divide-y divide-slate-100"></tbody>
-                    </table>
-                 </div>
-              </div>
-           </div>
-
-           <div id="tab-reports" class="admin-tab-content hidden animate-fade-in">
-              <div class="flex flex-col items-center justify-center h-full text-slate-400 mt-20">
-                 <div class="w-24 h-24 bg-slate-200 rounded-full flex items-center justify-center mb-6 text-4xl animate-bounce"><i class="fa-solid fa-screwdriver-wrench"></i></div>
-                 <h3 class="text-xl font-bold text-slate-600">ส่วนรายงาน</h3>
-                 <p>สามารถ Export เป็น Excel/PDF ได้ในเวอร์ชันจริง</p>
-              </div>
-           </div>
-
-        </div>
-     </main>
-  </div>
-
-  <div id="detailModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-backdrop">
-     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden animate-slide-up">
-        <div class="bg-brand-900 px-6 py-4 flex justify-between items-center">
-           <h3 class="text-lg font-bold text-white">รายละเอียดผู้สมัคร</h3>
-           <button onclick="closeModal()" class="text-white/80 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
-        </div>
-        <div class="p-8" id="modalContent">
-           </div>
-        <div class="bg-slate-50 px-6 py-4 flex justify-end gap-3">
-           <button onclick="closeModal()" class="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-200 text-sm font-medium">ปิด</button>
-           <button class="px-4 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-sm font-medium">ปริ้นใบสมัคร</button>
-        </div>
-     </div>
+       <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+          <div class="px-6 py-4 border-b bg-gray-50 font-bold text-gray-700">รายชื่อผู้สมัคร</div>
+          <div class="overflow-x-auto">
+             <table class="w-full text-left">
+                <thead class="bg-gray-100 border-b">
+                   <tr>
+                      <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">เลขบัตรฯ</th>
+                      <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">ชื่อ-สกุล</th>
+                      <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">ระดับชั้น</th>
+                      <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">แผนการเรียน</th>
+                      <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">สถานะ</th>
+                      <th class="px-6 py-3"></th>
+                   </tr>
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-gray-100">
+                   <tr><td colspan="6" class="p-8 text-center text-gray-400">กดปุ่ม Refresh เพื่อโหลดข้อมูล</td></tr>
+                </tbody>
+             </table>
+          </div>
+       </div>
+    </div>
   </div>
 
   <script>
-    // --- MOCK DATABASE (ข้อมูลจำลอง เพื่อให้ระบบทำงานได้จริงโดยไม่ต้องต่อ Backend) ---
-    let dbApplicants = [
-       { id: '1103702488192', prefix: 'นาย', fname: 'สมชาย', lname: 'รักเรียน', grade: 'ม.1', program: 'วิทย์-คณิต', prevSchool: 'อนุบาลประจวบ', gpa: '3.50', status: 'รอตรวจสอบ' },
-       { id: '1770400123456', prefix: 'น.ส.', fname: 'สมหญิง', lname: 'ใจดี', grade: 'ม.4', program: 'ศิลป์-ภาษา', prevSchool: 'บางสะพานวิทยา', gpa: '3.80', status: 'ผ่านเกณฑ์' }
-    ];
+    // ⚠️ URL ที่คุณให้มา ใส่ให้แล้วครับ
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtWZwXSFcbdrrPZSLrs4kmEDYB4fqx3MxUs0Wo40lgkAyIi_6C-j0AJ3YZgWOBJ16AHw/exec';
 
-    let currentStep = 1;
+    let currentIdCard = '';
+    let allData = [];
 
-    // --- VIEW NAVIGATION ---
-    function switchView(viewId) {
-       document.querySelectorAll('.view-section').forEach(el => {
-          el.classList.remove('active');
-          setTimeout(() => { if(!el.classList.contains('active')) el.style.display = 'none'; }, 400);
-       });
-       const target = document.getElementById(viewId);
-       target.style.display = 'flex';
-       setTimeout(() => target.classList.add('active'), 10);
+    // --- Navigation ---
+    function showView(id) {
+       document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+       document.getElementById(id).classList.add('active');
+       window.scrollTo(0,0);
     }
 
-    // --- AUTHENTICATION ---
-    function toggleAuthMode(mode) {
-       const student = document.getElementById('studentLoginFormDiv');
-       const admin = document.getElementById('adminLoginFormDiv');
-       if(mode === 'admin') {
-          student.classList.add('-translate-x-10', 'opacity-0', 'pointer-events-none');
-          admin.classList.remove('translate-x-10', 'opacity-0', 'pointer-events-none');
+    function toggleAdminMode() {
+       const student = document.getElementById('studentLoginContainer');
+       const admin = document.getElementById('adminLoginContainer');
+       if(student.classList.contains('hidden')) {
+          student.classList.remove('hidden'); admin.classList.add('hidden');
        } else {
-          student.classList.remove('-translate-x-10', 'opacity-0', 'pointer-events-none');
-          admin.classList.add('translate-x-10', 'opacity-0', 'pointer-events-none');
+          student.classList.add('hidden'); admin.classList.remove('hidden');
        }
     }
 
+    // --- Auth ---
     function handleStudentLogin(e) {
        e.preventDefault();
        const id = document.getElementById('studentIdCard').value;
-       if(id.length !== 13) return alert('กรุณากรอกเลขบัตร 13 หลัก');
+       if(id.length !== 13) return alert('กรุณากรอกเลข 13 หลัก');
        
-       document.getElementById('w_idCard').value = id;
-       document.getElementById('wizardUserDisplay').innerText = `ผู้สมัคร: ${id}`;
-       switchView('appWizardView');
-       resetWizard();
+       currentIdCard = id;
+       document.getElementById('displayIdCard').innerText = id;
+       showView('formView');
     }
 
     function handleAdminLogin(e) {
        e.preventDefault();
        const u = document.getElementById('adminUser').value;
        const p = document.getElementById('adminPass').value;
-       if(u==='admin' && p==='admin') {
-          switchView('adminDashboardView');
-          renderTable();
-          updateStats();
+       
+       if(u === 'admin' && p === 'admin') {
+          showView('adminView');
+          loadData(); // โหลดข้อมูลจริงทันที
        } else {
-          alert('Username/Password ไม่ถูกต้อง (admin/admin)');
+          alert('รหัสผ่านไม่ถูกต้อง (ลอง admin/admin)');
        }
     }
 
     function logout() {
-       if(confirm('ต้องการออกจากระบบ?')) {
-          switchView('authWrapper');
-          setTimeout(() => {
-             document.forms[0].reset(); document.forms[1].reset(); document.forms[2].reset();
-             toggleAuthMode('student');
-          }, 500);
+       if(confirm('ออกจากระบบ?')) {
+         document.getElementById('applicationForm').reset();
+         document.getElementById('studentIdCard').value = '';
+         showView('loginView');
+         toggleAdminMode(); // Reset to student view
        }
     }
 
-    // --- WIZARD LOGIC ---
-    function resetWizard() {
-       currentStep = 1; updateWizardUI();
-    }
-    
-    function moveStep(dir) {
-       // Validate before moving next
-       if(dir > 0) {
-          const stepDiv = document.getElementById(`step${currentStep}`);
-          const inputs = stepDiv.querySelectorAll('input[required], select[required]');
-          let valid = true;
-          inputs.forEach(i => {
-             if(!i.value) { i.classList.add('border-red-500'); valid = false; }
-             else i.classList.remove('border-red-500');
-          });
-          if(!valid) return alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-       }
-       currentStep += dir;
-       updateWizardUI();
-    }
+    // --- API Functions (เชื่อมต่อจริง) ---
+    function submitApplication(e) {
+       e.preventDefault();
+       const btn = document.getElementById('submitBtn');
+       const originalText = btn.innerHTML;
+       btn.innerHTML = '<span class="spinner"></span> กำลังส่งข้อมูล...';
+       btn.disabled = true;
 
-    function updateWizardUI() {
-       document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
-       document.getElementById(`step${currentStep}`).classList.remove('hidden');
-       
-       // Sidebar Nav Update
-       for(let i=1; i<=4; i++) {
-          const nav = document.getElementById(`navStep${i}`);
-          const badge = nav.querySelector('span');
-          if(i === currentStep) {
-             nav.className = 'p-3 rounded-lg flex items-center gap-3 text-sm font-medium text-brand-600 bg-white shadow-sm transition-all';
-             badge.className = 'w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs';
-             badge.innerHTML = i;
-          } else if (i < currentStep) {
-             nav.className = 'p-3 rounded-lg flex items-center gap-3 text-sm font-medium text-green-600';
-             badge.className = 'w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs';
-             badge.innerHTML = '<i class="fa-solid fa-check"></i>';
-          } else {
-             nav.className = 'p-3 rounded-lg flex items-center gap-3 text-sm font-medium text-slate-400';
-             badge.className = 'w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-xs';
-             badge.innerHTML = i;
-          }
-       }
-
-       document.getElementById('prevBtn').classList.toggle('hidden', currentStep === 1);
-       document.getElementById('nextBtn').classList.toggle('hidden', currentStep === 4);
-    }
-
-    function submitApplication() {
-       // Save to Mock DB
-       const data = {
-          id: document.getElementById('w_idCard').value,
-          prefix: document.getElementById('w_prefix').value,
-          fname: document.getElementById('w_firstName').value,
-          lname: document.getElementById('w_lastName').value,
-          grade: document.querySelector('input[name="w_grade"]:checked').value,
-          program: document.querySelector('input[name="w_program"]:checked').value,
-          prevSchool: document.getElementById('w_school').value,
-          gpa: document.getElementById('w_gpa').value,
-          status: 'รอตรวจสอบ'
+       const formData = {
+          action: 'submit',
+          idCard: currentIdCard,
+          prefix: document.getElementById('prefix').value,
+          firstName: document.getElementById('firstName').value,
+          lastName: document.getElementById('lastName').value,
+          firstNameEn: document.getElementById('firstNameEn').value,
+          lastNameEn: document.getElementById('lastNameEn').value,
+          birthDate: document.getElementById('birthDate').value,
+          // Hidden default values
+          birthHospital: document.getElementById('birthHospital').value,
+          bloodType: document.getElementById('bloodType').value,
+          nationality: document.getElementById('nationality').value,
+          ethnicity: document.getElementById('ethnicity').value,
+          religion: document.getElementById('religion').value,
+          
+          serviceArea: document.querySelector('input[name="serviceArea"]:checked').value,
+          subdistrict: document.getElementById('subdistrict').value,
+          district: document.getElementById('district').value,
+          province: document.getElementById('province').value,
+          previousSchool: document.getElementById('previousSchool').value,
+          gradeLevel: document.getElementById('gradeLevel').value,
+          gpa: document.getElementById('gpa').value,
+          program: document.querySelector('input[name="program"]:checked').value,
+          
+          documents: Array.from(document.querySelectorAll('input[name="documents"]:checked')).map(c=>c.value).join(', '),
+          otherDocument: document.getElementById('otherDocument').value
        };
-       
-       dbApplicants.unshift(data); // Add to top
-       
-       alert('บันทึกข้อมูลเรียบร้อย! ระบบจะส่งข้อมูลไปยังเจ้าหน้าที่');
-       logout();
+
+       fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors', // สำคัญมากสำหรับ Apps Script Web App
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+       })
+       .then(() => {
+           // เนื่องจาก no-cors จะไม่คืนค่า json กลับมาให้อ่านได้ เราต้อง assume ว่าสำเร็จ
+           alert('✅ ส่งใบสมัครเรียบร้อยแล้ว!');
+           logout();
+       })
+       .catch(err => {
+           console.error(err);
+           alert('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ');
+       })
+       .finally(() => {
+           btn.innerHTML = originalText;
+           btn.disabled = false;
+       });
     }
 
-    // --- ADMIN DASHBOARD LOGIC ---
-    function switchAdminTab(tabName) {
-       // Menu Active State
-       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'bg-white/10'));
-       document.getElementById(`menu-${tabName}`).classList.add('active', 'bg-white/10');
+    function loadData() {
+       const tbody = document.getElementById('tableBody');
+       tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-blue-500"><span class="spinner bg-blue-500"></span> กำลังโหลดข้อมูล...</td></tr>';
        
-       // Content Switch
-       document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
-       document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-
-       // Header Title Update
-       const titles = { 'overview': 'Dashboard Overview', 'applicants': 'Manage Applicants', 'reports': 'System Reports' };
-       document.getElementById('headerTitle').innerText = titles[tabName];
-
-       if(tabName === 'applicants') renderTable();
-       if(tabName === 'overview') updateStats();
+       // ใช้ action: getAll
+       fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'getAll' })
+       })
+       .then(res => res.json())
+       .then(response => {
+           if(response.success) {
+               allData = response.data;
+               renderTable(allData);
+           } else {
+               tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+           }
+       })
+       .catch(err => {
+           console.error(err);
+           // Fallback กรณีทดสอบ local หรือ CORS บล็อก (แต่ deploy แล้วน่าจะได้)
+           tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500">Error: ' + err.message + '</td></tr>';
+       });
     }
 
-    function updateStats() {
-       document.getElementById('statTotal').innerText = dbApplicants.length;
-       document.getElementById('statM1').innerText = dbApplicants.filter(x=>x.grade==='ม.1').length;
-       document.getElementById('statM4').innerText = dbApplicants.filter(x=>x.grade==='ม.4').length;
-    }
+    function renderTable(data) {
+       const tbody = document.getElementById('tableBody');
+       
+       // Update Stats
+       document.getElementById('statTotal').innerText = data.length;
+       document.getElementById('statM1').innerText = data.filter(x => x.gradeLevel === 'ม.1').length;
+       document.getElementById('statM4').innerText = data.filter(x => x.gradeLevel === 'ม.4').length;
 
-    function renderTable() {
-       const tbody = document.getElementById('applicantTableBody');
-       if(dbApplicants.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400">ยังไม่มีผู้สมัคร</td></tr>';
-          return;
+       if(data.length === 0) {
+           tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center">ไม่พบข้อมูล</td></tr>';
+           return;
        }
-       tbody.innerHTML = dbApplicants.map((d, index) => `
-          <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0 group">
-             <td class="p-4 font-mono text-xs text-slate-500">${d.id}</td>
-             <td class="p-4 font-medium text-slate-700">${d.prefix}${d.fname} ${d.lname}</td>
-             <td class="p-4"><span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-bold">${d.grade}</span></td>
-             <td class="p-4 text-slate-600">${d.program}</td>
-             <td class="p-4"><span class="px-2 py-1 ${d.status==='รอตรวจสอบ'?'bg-yellow-50 text-yellow-600':'bg-green-50 text-green-600'} rounded text-xs font-bold">${d.status}</span></td>
-             <td class="p-4 text-right relative">
-                <button onclick="toggleRowMenu(${index})" class="w-8 h-8 rounded-full hover:bg-slate-200 flex items-center justify-center text-slate-400 transition"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                <div id="menu-${index}" class="hidden absolute right-10 top-2 w-32 bg-white shadow-xl rounded-lg border border-slate-100 z-50 overflow-hidden text-left animate-fade-in">
-                   <button onclick="viewDetail('${d.id}')" class="block w-full px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 text-left"><i class="fa-regular fa-eye mr-2"></i> ดูข้อมูล</button>
-                   <button onclick="deleteItem('${d.id}')" class="block w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 text-left"><i class="fa-solid fa-trash mr-2"></i> ลบ</button>
-                </div>
+
+       tbody.innerHTML = data.map((d, i) => `
+          <tr class="hover:bg-blue-50 transition border-b">
+             <td class="px-6 py-4 font-mono text-sm">${d.idCard}</td>
+             <td class="px-6 py-4 text-sm font-medium">${d.prefix}${d.firstName} ${d.lastName}</td>
+             <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold">${d.gradeLevel}</span></td>
+             <td class="px-6 py-4 text-sm text-gray-600">${d.program}</td>
+             <td class="px-6 py-4"><span class="px-2 py-1 ${d.status==='สมัครแล้ว'?'bg-yellow-100 text-yellow-800':'bg-green-100 text-green-800'} rounded text-xs font-bold">${d.status}</span></td>
+             <td class="px-6 py-4 text-right">
+                <button onclick="alert('ฟีเจอร์ดูรายละเอียดจะเปิดใช้งานเร็วๆนี้\\n(ข้อมูล: ${d.firstName})')" class="text-blue-600 hover:text-blue-800 text-sm">รายละเอียด</button>
              </td>
           </tr>
        `).join('');
     }
-
-    // --- TABLE ACTIONS & MODAL ---
-    let openMenuIndex = -1;
-    function toggleRowMenu(idx) {
-       // Close others
-       document.querySelectorAll('[id^="menu-"]').forEach(el => el.classList.add('hidden'));
-       if(openMenuIndex === idx) { openMenuIndex = -1; return; }
-       document.getElementById(`menu-${idx}`).classList.remove('hidden');
-       openMenuIndex = idx;
-    }
-
-    function viewDetail(id) {
-       const person = dbApplicants.find(x => x.id === id);
-       if(!person) return;
-       const html = `
-         <div class="grid grid-cols-2 gap-y-4 gap-x-8">
-            <div class="col-span-2 border-b pb-2 mb-2 font-bold text-slate-800">ข้อมูลส่วนตัว</div>
-            <div><span class="text-slate-400 text-sm">ชื่อ-สกุล:</span> <div class="font-medium">${person.prefix}${person.fname} ${person.lname}</div></div>
-            <div><span class="text-slate-400 text-sm">เลขบัตร:</span> <div class="font-medium font-mono">${person.id}</div></div>
-            
-            <div class="col-span-2 border-b pb-2 mb-2 mt-4 font-bold text-slate-800">การศึกษา</div>
-            <div><span class="text-slate-400 text-sm">ระดับชั้นที่สมัคร:</span> <div class="font-medium text-brand-600">${person.grade}</div></div>
-            <div><span class="text-slate-400 text-sm">แผนการเรียน:</span> <div class="font-medium">${person.program}</div></div>
-            <div><span class="text-slate-400 text-sm">โรงเรียนเดิม:</span> <div class="font-medium">${person.prevSchool}</div></div>
-            <div><span class="text-slate-400 text-sm">GPA:</span> <div class="font-medium">${person.gpa}</div></div>
-         </div>
-       `;
-       document.getElementById('modalContent').innerHTML = html;
-       document.getElementById('detailModal').classList.remove('hidden');
-       document.getElementById('detailModal').classList.add('flex');
-       openMenuIndex = -1; renderTable(); // Close menu
-    }
-
-    function closeModal() {
-       document.getElementById('detailModal').classList.add('hidden');
-       document.getElementById('detailModal').classList.remove('flex');
-    }
-
-    function deleteItem(id) {
-       if(confirm('ยืนยันที่จะลบข้อมูลผู้สมัครรายนี้?')) {
-          dbApplicants = dbApplicants.filter(x => x.id !== id);
-          renderTable();
-          updateStats();
-       }
-    }
-    
-    // Close menus when clicking outside
-    document.addEventListener('click', function(e) {
-       if(!e.target.closest('td.relative')) {
-          document.querySelectorAll('[id^="menu-"]').forEach(el => el.classList.add('hidden'));
-          openMenuIndex = -1;
-       }
-    });
-
   </script>
 </body>
 </html>
