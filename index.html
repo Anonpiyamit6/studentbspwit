@@ -3,198 +3,399 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบรับสมัครนักเรียน</title>
+  <title>ระบบรับสมัครนักเรียน (Full Version)</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
   <style>
     body { font-family: 'Sarabun', sans-serif; }
     .hidden { display: none !important; }
-    /* Animations */
+
+    /* Custom Input Style */
+    .input-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #1e3a8a; }
+    .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; transition: all 0.2s; }
+    .input-group input:focus, .input-group select:focus { border-color: #2563eb; ring: 2px; outline: none; }
+    .section-head { background: #e0f2fe; padding: 10px; font-weight: bold; color: #0c4a6e; border-left: 4px solid #0284c7; margin-top: 20px; margin-bottom: 10px; }
+
+    /* Admin Tabs */
+    .tab-btn { padding: 12px 24px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: bold; color: #64748b; transition: all 0.2s; }
+    .tab-btn.active { border-bottom-color: #1e3a8a; color: #1e3a8a; background: #f1f5f9; border-radius: 8px 8px 0 0; }
+    
+    /* Animation */
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
-    .drag-active { background-color: #eff6ff !important; border-color: #3b82f6 !important; transform: scale(1.01); }
-    /* Tabs */
-    .tab-btn { padding: 12px; cursor: pointer; border-bottom: 3px solid transparent; color: #64748b; font-weight: bold; }
-    .tab-btn.active { border-bottom-color: #1e3a8a; color: #1e3a8a; background: #f8fafc; }
+
+    /* Drag & Drop */
+    .drag-active { background-color: #eff6ff !important; border-color: #3b82f6 !important; transform: scale(1.01); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1); }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans">
+<body class="bg-gray-100 min-h-screen">
 
   <div id="loginSection" class="min-h-screen flex flex-col md:flex-row">
-    <div class="md:w-1/2 bg-blue-900 flex items-center justify-center text-white p-10 relative">
-      <div><h1 class="text-4xl font-bold">ระบบรับสมัครนักเรียน</h1><p class="mt-2 text-blue-200">โรงเรียนบางสะพานวิทยา</p></div>
-      <button onclick="toggleLogin()" class="absolute bottom-5 left-5 text-xs text-blue-300 underline">สลับโหมดเจ้าหน้าที่</button>
+    <div class="md:w-1/2 bg-blue-900 flex flex-col justify-center items-center text-white p-10 relative">
+      <h1 class="text-4xl font-bold mb-4">ระบบรับสมัครนักเรียน</h1>
+      <h2 class="text-2xl opacity-90">โรงเรียนบางสะพานวิทยา</h2>
+      <button onclick="toggleAdminLogin()" class="absolute bottom-4 left-4 text-blue-300 text-xs hover:text-white underline transition">
+        สลับโหมดผู้ใช้งาน (นักเรียน / เจ้าหน้าที่)
+      </button>
     </div>
-    <div class="md:w-1/2 bg-white flex items-center justify-center p-8">
+    
+    <div class="md:w-1/2 bg-white flex flex-col justify-center items-center p-8">
       <div class="w-full max-w-md">
-        <div id="boxStudent">
-           <h2 class="text-2xl font-bold text-center mb-6">นักเรียน: ตรวจสอบสิทธิ์</h2>
-           <form onsubmit="doLogin(event, 'student')" class="space-y-4">
-             <input id="stuId" class="w-full p-4 border rounded-xl text-center text-xl font-mono tracking-widest" placeholder="เลขประจำตัวประชาชน" required>
-             <button id="btnStu" type="submit" class="w-full bg-blue-900 text-white py-3 rounded-xl font-bold shadow-lg">เข้าสู่ระบบ</button>
-           </form>
+        
+        <div id="studentLoginBox" class="animate-fade-in-up">
+          <div class="text-center mb-8">
+            <h3 class="text-2xl font-bold text-gray-800">นักเรียน: ตรวจสอบสิทธิ์</h3>
+            <p class="text-gray-500 text-sm mt-1">กรอกเลขประจำตัวประชาชน 13 หลัก</p>
+          </div>
+          <form onsubmit="handleLogin(event, 'student')" class="space-y-5">
+            <input type="text" id="loginIdCard" maxlength="13" required 
+                   class="w-full p-4 border border-gray-300 rounded-xl text-2xl text-center tracking-[0.2em] font-mono focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all placeholder-gray-300" 
+                   placeholder="0000000000000">
+            <button type="submit" id="btnLoginStudent" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-800 shadow-lg transition-all transform hover:-translate-y-1">
+              เข้าสู่ระบบ
+            </button>
+          </form>
         </div>
-        <div id="boxAdmin" class="hidden">
-           <h2 class="text-2xl font-bold text-center mb-6 text-red-800">เจ้าหน้าที่: เข้าสู่ระบบ</h2>
-           <form onsubmit="doLogin(event, 'admin')" class="space-y-4">
-             <input id="admUser" class="w-full p-3 border rounded" placeholder="Username">
-             <input id="admPass" type="password" class="w-full p-3 border rounded" placeholder="Password">
-             <button id="btnAdm" type="submit" class="w-full bg-red-800 text-white py-3 rounded font-bold shadow-lg">Login</button>
-           </form>
+
+        <div id="adminLoginBox" class="hidden animate-fade-in-up">
+          <div class="text-center mb-8">
+            <h3 class="text-2xl font-bold text-red-800">เจ้าหน้าที่: เข้าสู่ระบบ</h3>
+          </div>
+          <form onsubmit="handleLogin(event, 'admin')" class="space-y-4 border border-gray-100 p-6 rounded-2xl shadow-sm bg-white">
+            <div><label class="block font-bold text-gray-700 text-sm mb-1">Username</label><input type="text" id="adminUser" class="w-full p-3 border rounded-lg"></div>
+            <div><label class="block font-bold text-gray-700 text-sm mb-1">Password</label><input type="password" id="adminPass" class="w-full p-3 border rounded-lg"></div>
+            <button type="submit" id="btnLoginAdmin" class="w-full bg-red-800 text-white py-3 rounded-lg font-bold hover:bg-red-700 mt-2 shadow-md">Login</button>
+            <button type="button" onclick="toggleAdminLogin()" class="w-full text-gray-400 mt-4 text-xs hover:text-gray-600">← กลับไปหน้านักเรียน</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="adminSection" class="hidden min-h-screen p-4 md:p-8 bg-gray-100">
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[85vh] flex flex-col">
+      <div class="bg-gray-800 text-white p-6 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+           <div class="bg-gray-700 p-2 rounded-lg">⚙️</div>
+           <div><h2 class="text-xl font-bold">Admin Dashboard</h2><p class="text-xs text-gray-400">จัดการข้อมูลผู้สมัครและสิทธิ์</p></div>
+        </div>
+        <button onclick="location.reload()" class="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-lg text-sm font-bold">ออกจากระบบ</button>
+      </div>
+
+      <div class="flex flex-wrap border-b bg-gray-50 px-6 pt-4 gap-4">
+        <div onclick="switchTab('applicants')" id="tab-applicants" class="tab-btn active">📄 รายชื่อผู้สมัคร</div>
+        <div onclick="switchTab('single')" id="tab-single" class="tab-btn">➕ เพิ่มสิทธิ์รายคน</div>
+        <div onclick="switchTab('import')" id="tab-import" class="tab-btn">📥 นำเข้า Excel</div>
+      </div>
+
+      <div id="view-applicants" class="p-8 flex-grow">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="font-bold text-xl text-gray-800">รายการใบสมัคร</h3>
+          <button onclick="renderApplicants(allApplicants)" class="text-blue-600 text-sm underline">รีเฟรชข้อมูล</button>
+        </div>
+        <div class="overflow-x-auto border border-gray-200 rounded-xl shadow-sm">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-blue-50 text-blue-900 uppercase text-xs font-bold">
+              <tr><th class="p-4">ระดับชั้น</th><th class="p-4">เลขบัตร</th><th class="p-4">ชื่อ-สกุล</th><th class="p-4 text-center">จัดการ</th></tr>
+            </thead>
+            <tbody id="adminTableBody" class="bg-white text-sm divide-y divide-gray-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="view-single" class="p-8 hidden flex-grow bg-gray-50 flex justify-center">
+         <div class="bg-white p-8 rounded-xl shadow-lg border w-full max-w-lg h-fit">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">เพิ่มสิทธิ์รายบุคคล (Add Single)</h3>
+            <form onsubmit="handleAddSingle(event)" class="space-y-4">
+               <div><label class="font-bold text-sm">เลขบัตรประชาชน (13 หลัก)</label><input type="text" id="addSingleId" maxlength="13" class="w-full p-3 border rounded font-mono" required></div>
+               <div><label class="font-bold text-sm">ชื่อ-นามสกุล</label><input type="text" id="addSingleName" class="w-full p-3 border rounded" required></div>
+               <button type="submit" id="btnAddSingle" class="w-full bg-blue-600 text-white py-3 rounded font-bold shadow hover:bg-blue-700">บันทึกข้อมูล</button>
+            </form>
+         </div>
+      </div>
+
+      <div id="view-import" class="p-8 hidden flex-grow bg-gray-50">
+        <div class="max-w-4xl mx-auto">
+          <div class="text-center mb-6"><h2 class="text-2xl font-bold">นำเข้าฐานข้อมูล (Whitelist)</h2><p class="text-gray-500 text-sm">อัปโหลดไฟล์ Excel เพื่อกำหนดรายชื่อ (ล้างข้อมูลเก่า)</p></div>
+          
+          <div class="bg-white p-6 rounded-2xl shadow-sm border mb-6 cursor-pointer hover:bg-blue-50 transition"
+               id="dropZone" onclick="document.getElementById('excelFile').click()" 
+               ondragover="event.preventDefault(); this.classList.add('drag-active');" 
+               ondragleave="event.preventDefault(); this.classList.remove('drag-active');" 
+               ondrop="handleDrop(event)">
+               <input type="file" id="excelFile" class="hidden" accept=".xlsx, .xls" onchange="handleFileUpload(event)">
+               <div class="text-center py-8">
+                  <div class="text-4xl mb-2">📁</div>
+                  <p class="font-bold text-gray-700">คลิกหรือลากไฟล์มาวางที่นี่</p>
+                  <p class="text-xs text-gray-400">Column A=ID, B=Name</p>
+               </div>
+          </div>
+
+          <div id="previewSection" class="hidden">
+             <div class="flex justify-between mb-2"><span class="font-bold text-gray-600">ตัวอย่างข้อมูล (<span id="previewCount">0</span>)</span><button onclick="clearImport()" class="text-xs text-red-500">ล้างค่า</button></div>
+             <div class="bg-white border rounded-xl shadow h-64 overflow-y-auto custom-scrollbar">
+                <table class="w-full text-sm text-left"><thead class="bg-gray-100 sticky top-0"><tr><th class="p-3">#</th><th class="p-3">ID</th><th class="p-3">Name</th></tr></thead><tbody id="previewTableBody"></tbody></table>
+             </div>
+             <button id="btnConfirmImport" onclick="confirmImport()" class="w-full mt-4 bg-green-600 text-white py-3 rounded-lg font-bold shadow hover:bg-green-700">ยืนยันการนำเข้า</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="adminSection" class="hidden p-6">
-    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden min-h-[80vh]">
-       <div class="bg-gray-800 text-white p-4 flex justify-between items-center">
-         <h2 class="font-bold text-xl">⚙️ Admin Dashboard</h2>
-         <button onclick="location.reload()" class="text-red-300 text-sm">ออกจากระบบ</button>
-       </div>
-       
-       <div class="flex border-b bg-gray-50">
-         <div onclick="setTab('list')" id="tab-list" class="tab-btn active w-1/3 text-center">📄 รายชื่อผู้สมัคร</div>
-         <div onclick="setTab('add')" id="tab-add" class="tab-btn w-1/3 text-center">➕ เพิ่มสิทธิ์รายคน</div>
-         <div onclick="setTab('import')" id="tab-import" class="tab-btn w-1/3 text-center">📥 Import Excel</div>
-       </div>
+  <div id="formSection" class="hidden p-4 md:p-8 max-w-5xl mx-auto">
+    <div class="bg-white p-6 md:p-10 rounded-2xl shadow-2xl relative border border-gray-200">
+      
+      <div id="adminEditHeader" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8 flex justify-between items-center">
+        <div><p class="font-bold text-yellow-800">โหมดแก้ไขข้อมูล (Admin)</p><p class="text-sm text-yellow-600">กำลังแก้ไข: <span id="editingName" class="font-bold">-</span></p></div>
+        <button onclick="closeAdminEdit()" class="bg-white border text-gray-600 px-4 py-2 rounded-lg text-sm font-bold">ยกเลิก</button>
+      </div>
 
-       <div id="view-list" class="p-6">
-         <div id="tableContainer" class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-100 uppercase"><tr><th class="p-3">Level</th><th class="p-3">ID</th><th class="p-3">Name</th><th class="p-3">Action</th></tr></thead><tbody id="tbodyList"></tbody></table></div>
-       </div>
+      <div class="flex justify-between items-center mb-8 pb-4 border-b">
+        <div><h2 class="text-3xl font-bold text-blue-900">แบบฟอร์มใบสมัคร</h2><p class="text-gray-500 mt-1">โรงเรียนบางสะพานวิทยา</p></div>
+        <button onclick="location.reload()" class="text-red-500 font-medium text-sm">ออกจากระบบ</button>
+      </div>
 
-       <div id="view-add" class="p-8 hidden bg-gray-50 h-full">
-         <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow border">
-           <h3 class="text-xl font-bold text-center mb-6">เพิ่มสิทธิ์รายบุคคล</h3>
-           <form onsubmit="addSingle(event)" class="space-y-4">
-             <div><label class="block font-bold text-sm mb-1">เลขบัตรประชาชน</label><input id="addId" class="w-full p-3 border rounded font-mono" required maxlength="13"></div>
-             <div><label class="block font-bold text-sm mb-1">ชื่อ-สกุล</label><input id="addName" class="w-full p-3 border rounded" required></div>
-             <button id="btnAddSingle" type="submit" class="w-full bg-green-600 text-white py-3 rounded font-bold shadow hover:bg-green-700">บันทึกข้อมูล</button>
-           </form>
-         </div>
-       </div>
+      <form id="appForm" onsubmit="submitForm(event)">
+        <div class="bg-blue-50 p-6 rounded-xl mb-8 border border-blue-100">
+           <label class="font-bold text-xl text-blue-900 mb-3 block">สมัครเข้าเรียนระดับชั้น</label>
+           <div class="relative">
+             <select id="applyLevel" class="w-full md:w-1/3 p-3 border border-blue-200 rounded-lg text-lg font-bold text-blue-800 bg-white" required>
+                <option value="">-- กรุณาเลือก --</option><option value="ม.1">มัธยมศึกษาปีที่ 1</option><option value="ม.4">มัธยมศึกษาปีที่ 4</option>
+             </select>
+           </div>
+        </div>
 
-       <div id="view-import" class="p-8 hidden">
-         <div class="border-2 border-dashed border-blue-300 rounded-xl p-10 text-center cursor-pointer hover:bg-blue-50" onclick="document.getElementById('fileIn').click()">
-            <input type="file" id="fileIn" class="hidden" onchange="readExcel(this)">
-            <p class="text-xl font-bold text-blue-800">คลิกเลือกไฟล์ Excel หรือ ลากวาง</p>
-            <p class="text-sm text-gray-400 mt-2">Column A=ID, B=Name</p>
-         </div>
-         <div id="previewArea" class="hidden mt-6">
-           <p class="font-bold mb-2">พบ <span id="countPreview">0</span> รายชื่อ</p>
-           <button onclick="runImport()" id="btnImport" class="bg-blue-900 text-white px-6 py-2 rounded shadow">ยืนยันการนำเข้า (ล้างข้อมูลเก่า)</button>
-         </div>
-       </div>
+        <div class="section-head rounded">1. ข้อมูลการสมัคร</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div class="input-group"><label>สถานะพื้นที่บริการ</label><select id="serviceArea"><option>อยู่ในเขตพื้นที่บริการ</option><option>อยู่นอกเขตพื้นที่บริการ</option></select></div>
+          <div class="input-group"><label>แผนการเรียน</label><select id="program"><option>วิทย์-คณิต</option><option>ศิลป์-คำนวณ</option><option>ศิลป์-ภาษา</option><option>ทั่วไป</option></select></div>
+          <div class="input-group md:col-span-2"><label>โรงเรียนเดิม</label><input type="text" id="oldSchool" placeholder="ชื่อโรงเรียนที่จบมา"></div>
+        </div>
+
+        <div class="section-head rounded">2. ข้อมูลส่วนตัว</div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
+           <div class="input-group md:col-span-2"><label>เลขบัตรประชาชน</label><input id="idCard" readonly class="bg-gray-100 text-gray-500 cursor-not-allowed font-mono tracking-wider"></div>
+           <div class="input-group"><label>คำนำหน้า</label><select id="prefix"><option>ด.ช.</option><option>ด.ญ.</option><option>นาย</option><option>น.ส.</option></select></div>
+           <div class="input-group"><label>ชื่อ</label><input id="name"></div>
+           <div class="input-group"><label>นามสกุล</label><input id="surname"></div>
+           <div class="input-group"><label>เบอร์โทร</label><input id="phoneReg"></div>
+        </div>
+
+        <div class="flex gap-4 pt-4 border-t">
+           <button type="submit" id="btnSubmit" class="flex-1 bg-blue-900 text-white font-bold py-4 rounded-xl hover:bg-blue-800 text-xl shadow-lg transition-transform transform hover:-translate-y-1">
+             บันทึกข้อมูล
+           </button>
+           <a id="btnDownloadPDF" href="#" target="_blank" class="hidden flex-1 bg-green-600 text-white font-bold py-4 rounded-xl text-center shadow-lg hover:bg-green-700 flex items-center justify-center gap-2">
+              🖨️ พิมพ์ใบสมัคร PDF
+           </a>
+        </div>
+      </form>
     </div>
   </div>
 
-  <div id="formSection" class="hidden p-6"><div class="max-w-4xl mx-auto bg-white p-8 rounded shadow"><h2 class="text-2xl font-bold mb-4">ใบสมัคร</h2><form id="appForm" onsubmit="saveForm(event)"><button class="bg-blue-900 text-white p-3 rounded w-full">ส่งใบสมัคร</button></form></div></div>
-
   <script>
     // ==========================================
-    // 🔴🔴 ใส่ URL ใหม่ที่ Deploy แล้ว ตรงนี้ 🔴🔴
+    // 🔴🔴 ใส่ URL ล่าสุดของคุณตรงนี้ 🔴🔴
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtWZwXSFcbdrrPZSLrs4kmEDYB4fqx3MxUs0Wo40lgkAyIi_6C-j0AJ3YZgWOBJ16AHw/exec'; 
     // ==========================================
 
-    let rawData = [];
-    let importData = [];
+    let allApplicants = [];
+    let isAdminMode = false;
+    let tempImportData = [];
 
-    function toggleLogin() { document.getElementById('boxStudent').classList.toggle('hidden'); document.getElementById('boxAdmin').classList.toggle('hidden'); }
-    function setTab(t) { 
-      ['list','add','import'].forEach(x => { document.getElementById('view-'+x).classList.add('hidden'); document.getElementById('tab-'+x).classList.remove('active'); });
-      document.getElementById('view-'+t).classList.remove('hidden'); document.getElementById('tab-'+t).classList.add('active');
+    // --- UTILS ---
+    function toggleAdminLogin() { document.getElementById('studentLoginBox').classList.toggle('hidden'); document.getElementById('adminLoginBox').classList.toggle('hidden'); }
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      ['applicants', 'single', 'import'].forEach(t => document.getElementById('view-'+t).classList.add('hidden'));
+      document.getElementById('tab-' + tabName).classList.add('active');
+      document.getElementById('view-' + tabName).classList.remove('hidden');
     }
 
-    function doLogin(e, role) {
+    // --- LOGIN SYSTEM ---
+    function handleLogin(e, role) {
       e.preventDefault();
-      const u = role==='student'? document.getElementById('stuId').value : document.getElementById('admUser').value;
-      const p = role==='student'? '' : document.getElementById('admPass').value;
-      const btn = role==='student'? document.getElementById('btnStu') : document.getElementById('btnAdm');
+      let payload = { action: 'login' };
+      let btn;
       
-      btn.innerText = 'Loading...'; btn.disabled = true;
+      if (role === 'student') {
+        payload.username = document.getElementById('loginIdCard').value;
+        payload.password = '';
+        btn = document.getElementById('btnLoginStudent');
+      } else {
+        payload.username = document.getElementById('adminUser').value;
+        payload.password = document.getElementById('adminPass').value;
+        btn = document.getElementById('btnLoginAdmin');
+      }
 
-      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) })
-      .then(r => r.json())
-      .then(res => {
-        if(res.error) alert(res.error);
-        else if(res.role === 'admin') {
-          document.getElementById('loginSection').classList.add('hidden');
-          document.getElementById('adminSection').classList.remove('hidden');
-          renderList(res.data);
-        } else {
-          // Student logic here
-          alert('Login Student Success (Form Hidden for short code)');
-        }
-      })
-      .catch(err => alert('Error: ' + err))
-      .finally(() => { btn.innerText = 'Login'; btn.disabled = false; });
-    }
+      if(!payload.username) { alert('กรุณาระบุข้อมูล'); return; }
+      const originalText = btn.innerText;
+      btn.innerText = '⏳ กำลังตรวจสอบ...'; btn.disabled = true;
 
-    // --- MAIN FUNCTION: ADD SINGLE ---
-    function addSingle(e) {
-      e.preventDefault();
-      const id = document.getElementById('addId').value;
-      const name = document.getElementById('addName').value;
-      const btn = document.getElementById('btnAddSingle');
-      
-      btn.innerText = '⏳ กำลังบันทึก...'; btn.disabled = true;
-
-      // Log เพื่อเช็คว่าส่งอะไรไป
-      console.log("Sending to:", SCRIPT_URL);
-
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        // สำคัญ: ต้องเป็น Stringify JSON
-        body: JSON.stringify({ 
-          action: 'appendWhitelist', 
-          data: { id: id, name: name } 
-        })
-      })
-      .then(response => {
-        // เช็คว่า Server ตอบ 200 OK ไหม
-        if (!response.ok) throw new Error("HTTP Status " + response.status);
-        return response.json();
-      })
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+      .then(res => res.json())
       .then(json => {
-        if (json.success) {
-          alert('✅ บันทึกสำเร็จ!');
-          document.getElementById('addId').value = '';
-          document.getElementById('addName').value = '';
-        } else {
-          alert('❌ Server แจ้งว่า: ' + json.error);
-        }
+         if (json.error) { alert('❌ ' + json.error); } 
+         else {
+            document.getElementById('loginSection').classList.add('hidden');
+            if (json.role === 'admin') {
+               // --- เข้าสู่ระบบ Admin ---
+               document.getElementById('adminSection').classList.remove('hidden');
+               allApplicants = json.data;
+               renderApplicants(allApplicants);
+            } else {
+               // --- เข้าสู่ระบบ นักเรียน (เปิดฟอร์ม) ---
+               isAdminMode = false;
+               document.getElementById('formSection').classList.remove('hidden');
+               document.getElementById('idCard').value = payload.username; // ตั้งค่าเลขบัตร
+               
+               // ถ้าเคยสมัครแล้ว ให้ดึงข้อมูลเดิมมาแสดง
+               if(json.found) {
+                  populateForm(json.data);
+                  // ถ้ามี PDF ให้ปุ่มโหลดขึ้น
+                  if(json.data.pdfUrl) {
+                      const btnPDF = document.getElementById('btnDownloadPDF');
+                      btnPDF.href = json.data.pdfUrl || '#';
+                      btnPDF.classList.remove('hidden');
+                  }
+               }
+            }
+         }
       })
-      .catch(error => {
-        console.error("Fetch Error:", error);
-        alert('❌ เชื่อมต่อล้มเหลว (Failed to fetch)\n1. ตรวจสอบว่า Deploy New Version หรือยัง\n2. ตรวจสอบ URL\nDetail: ' + error);
-      })
-      .finally(() => {
-        btn.innerText = 'บันทึกข้อมูล'; btn.disabled = false;
-      });
+      .catch(err => alert('เชื่อมต่อไม่ได้: ' + err))
+      .finally(() => { btn.innerText = originalText; btn.disabled = false; });
     }
 
-    function renderList(data) {
-      const tb = document.getElementById('tbodyList'); tb.innerHTML = '';
-      data.forEach(r => tb.innerHTML += `<tr class="border-b"><td class="p-2">${r.level}</td><td class="p-2 font-mono">${r.idCard}</td><td class="p-2">${r.name}</td><td class="p-2"><button class="text-blue-600">Edit</button></td></tr>`);
+    // --- ADMIN: LIST APPLICANTS ---
+    function renderApplicants(data) {
+       const tbody = document.getElementById('adminTableBody');
+       tbody.innerHTML = '';
+       if(!data || !data.length) { tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-gray-400">ไม่พบข้อมูลใบสมัคร</td></tr>'; return; }
+       
+       data.forEach((r, index) => {
+         tbody.innerHTML += `
+           <tr class="hover:bg-blue-50 transition">
+             <td class="p-4"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${r.level}</span></td>
+             <td class="p-4 font-mono text-gray-700">${r.idCard}</td>
+             <td class="p-4 font-bold text-gray-800">${r.name}</td>
+             <td class="p-4 text-center">
+                <button onclick="openAdminEdit(${index})" class="bg-white border border-yellow-400 text-yellow-600 px-3 py-1 rounded-lg text-sm hover:bg-yellow-50 font-bold">แก้ไข</button>
+             </td>
+           </tr>
+         `;
+       });
     }
 
-    // Import Logic (Simplified)
-    function readExcel(inpt) {
-       const f = inpt.files[0]; const r = new FileReader();
-       r.onload = (e) => {
-         const wb = XLSX.read(e.target.result, {type:'array'});
-         const arr = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
-         importData = arr.map(r => ({id: r[0], name: r[1]})).filter(x => x.id);
-         document.getElementById('previewArea').classList.remove('hidden');
-         document.getElementById('countPreview').innerText = importData.length;
-       };
-       r.readAsArrayBuffer(f);
+    // --- ADMIN: ADD SINGLE ---
+    function handleAddSingle(e) {
+        e.preventDefault();
+        const id = document.getElementById('addSingleId').value;
+        const name = document.getElementById('addSingleName').value;
+        const btn = document.getElementById('btnAddSingle');
+        btn.innerText = 'กำลังบันทึก...'; btn.disabled = true;
+
+        fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'appendWhitelist', data: { id, name } }) })
+        .then(r => r.json())
+        .then(res => {
+            if(res.success) { alert('✅ เพิ่มสิทธิ์สำเร็จ'); document.getElementById('addSingleId').value=''; document.getElementById('addSingleName').value=''; }
+            else { alert('❌ ' + res.error); }
+        })
+        .finally(() => { btn.innerText = 'บันทึกข้อมูล'; btn.disabled = false; });
     }
-    function runImport() {
-       if(!confirm('ยืนยัน?')) return;
-       fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({action:'updateWhitelist', listData:importData})})
-       .then(r=>r.json()).then(j=>{ alert(j.success?'OK':'Err'); location.reload(); });
+
+    // --- ADMIN: IMPORT EXCEL ---
+    function handleDrop(e) { e.preventDefault(); document.getElementById('dropZone').classList.remove('drag-active'); if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); }
+    function handleFileUpload(e) { if(e.target.files[0]) processFile(e.target.files[0]); }
+    function processFile(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const wb = XLSX.read(e.target.result, {type: 'array'});
+        const jsonData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
+        tempImportData = jsonData.map(r => ({id: r[0], name: r[1]})).filter(x => x.id && String(x.id).length >= 5);
+        renderPreviewImport();
+      };
+      reader.readAsArrayBuffer(file);
+    }
+    function renderPreviewImport() {
+        document.getElementById('previewSection').classList.remove('hidden');
+        document.getElementById('previewCount').innerText = tempImportData.length;
+        const tbody = document.getElementById('previewTableBody'); tbody.innerHTML = '';
+        tempImportData.slice(0, 50).forEach((r,i) => tbody.innerHTML += `<tr class="border-b"><td class="p-2 text-gray-400 text-xs">${i+1}</td><td class="p-2 font-mono text-blue-700">${r.id}</td><td class="p-2">${r.name||'-'}</td></tr>`);
+    }
+    function clearImport() { document.getElementById('excelFile').value=''; document.getElementById('previewSection').classList.add('hidden'); tempImportData=[]; }
+    function confirmImport() {
+        if(!confirm('ยืนยันการนำเข้า? ข้อมูลเดิมจะหายทั้งหมด')) return;
+        const btn = document.getElementById('btnConfirmImport'); btn.innerText = 'กำลังอัปโหลด...'; btn.disabled = true;
+        fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateWhitelist', listData: tempImportData }) })
+        .then(r => r.json()).then(res => { if(res.success) { alert('✅ นำเข้าสำเร็จ'); clearImport(); } else alert('❌ ' + res.error); })
+        .finally(() => { btn.innerText = 'ยืนยันการนำเข้า'; btn.disabled = false; });
+    }
+
+    // --- FORM LOGIC (COMMON) ---
+    function populateForm(data) {
+       for (const key in data) {
+          const el = document.getElementById(key);
+          if (el && el.type !== 'checkbox') el.value = data[key];
+       }
+    }
+
+    function submitForm(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmit');
+      const originalTxt = btn.innerText;
+      btn.innerText = 'กำลังบันทึกข้อมูล...'; btn.disabled = true;
+
+      let data = {};
+      document.querySelectorAll('#appForm input:not([type="checkbox"]), #appForm select').forEach(el => data[el.id] = el.value);
+
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'save', data: data }) })
+      .then(res => res.json())
+      .then(json => {
+         if(json.success) {
+            alert('✅ บันทึกข้อมูลและสร้างใบสมัครสำเร็จ!');
+            const btnPDF = document.getElementById('btnDownloadPDF');
+            btnPDF.href = json.url;
+            btnPDF.classList.remove('hidden');
+            if(!isAdminMode) window.open(json.url, '_blank'); // เปิด PDF ทันทีถ้านร.กรอกเอง
+         } else { alert('❌ Error: ' + json.error); }
+      })
+      .catch(err => alert('Save Error: ' + err))
+      .finally(() => { btn.innerText = originalTxt; btn.disabled = false; });
+    }
+
+    // --- ADMIN EDIT MODE ---
+    function openAdminEdit(index) {
+       isAdminMode = true;
+       const data = allApplicants[index].fullData;
+       document.getElementById('adminSection').classList.add('hidden');
+       document.getElementById('formSection').classList.remove('hidden');
+       document.getElementById('adminEditHeader').classList.remove('hidden');
+       document.getElementById('editingName').innerText = data.prefix + data.name + " " + data.surname;
+       document.getElementById('btnSubmit').classList.replace('bg-blue-900','bg-yellow-500');
+       document.getElementById('btnSubmit').classList.replace('hover:bg-blue-800','hover:bg-yellow-600');
+       document.getElementById('btnSubmit').innerText = 'บันทึกการแก้ไข (Admin)';
+       
+       populateForm(data);
+       
+       const btnPDF = document.getElementById('btnDownloadPDF');
+       if (allApplicants[index].pdfUrl) { btnPDF.href = allApplicants[index].pdfUrl; btnPDF.classList.remove('hidden'); } 
+       else btnPDF.classList.add('hidden');
+    }
+
+    function closeAdminEdit() {
+       document.getElementById('appForm').reset();
+       document.getElementById('formSection').classList.add('hidden');
+       document.getElementById('adminSection').classList.remove('hidden');
+       document.getElementById('adminEditHeader').classList.add('hidden');
+       // Reset Button Style
+       const btn = document.getElementById('btnSubmit');
+       btn.className = "flex-1 bg-blue-900 text-white font-bold py-4 rounded-xl hover:bg-blue-800 text-xl shadow-lg transition-transform transform hover:-translate-y-1";
+       btn.innerText = "บันทึกข้อมูล";
     }
   </script>
 </body>
