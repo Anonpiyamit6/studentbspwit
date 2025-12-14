@@ -3,406 +3,514 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบรับสมัครนักเรียน - บางสะพานวิทยา</title>
-  
+  <title>ใบสมัคร - โรงเรียนบางสะพานวิทยา</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  
   <style>
-    body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
+    body { font-family: 'Sarabun', sans-serif; background: #f3f4f6; }
     .hidden { display: none !important; }
-    
-    /* Login Styles */
+    /* Login */
     .login-split { display: flex; min-height: 100vh; }
-    .login-left { background-color: #1e3a8a; color: white; width: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; }
+    .login-left { background-color: #1e3a8a; width: 50%; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; }
     .login-right { background-color: white; width: 50%; display: flex; justify-content: center; align-items: center; padding: 40px; }
     @media (max-width: 768px) { .login-split { flex-direction: column; } .login-left, .login-right { width: 100%; min-height: 50vh; } }
-
-    /* Form Styles */
-    .paper { background: white; padding: 40px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
-    .section-head { background: #e0f2fe; padding: 10px; border-left: 5px solid #0284c7; font-weight: bold; color: #075985; margin: 20px 0 10px 0; }
     
-    .input-row { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
-    .input-col { flex: 1; min-width: 200px; }
-    label { display: block; font-weight: bold; font-size: 0.9rem; margin-bottom: 4px; color: #374151; }
-    input[type="text"], input[type="number"], input[type="date"], select {
-      width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-family: 'Sarabun';
-    }
-    input:focus, select:focus { border-color: #2563eb; outline: none; ring: 2px; }
+    /* Paper Form Style */
+    .paper-page { background: white; max-width: 210mm; margin: 0 auto 20px auto; padding: 20mm; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); position: relative; }
+    .page-num { position: absolute; top: 10mm; right: 10mm; font-size: 0.8rem; color: #94a3b8; }
     
-    .check-list label { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer; font-size: 0.95rem; }
-    .check-list input { transform: scale(1.2); }
+    /* Inputs */
+    .line-input { border: none; border-bottom: 1px dotted #000; width: 100%; outline: none; background: transparent; color: #1e40af; font-weight: bold; padding: 0 5px; }
+    .box-input { border: 1px solid #cbd5e1; padding: 8px; border-radius: 4px; width: 100%; }
+    .check-item { display: flex; align-items: start; gap: 8px; margin-bottom: 6px; cursor: pointer; }
+    .check-item input { margin-top: 5px; transform: scale(1.2); }
     
-    /* Admin Tabs */
-    .tab-btn { padding: 12px 20px; cursor: pointer; font-weight: bold; color: #64748b; border-bottom: 3px solid transparent; }
-    .tab-btn.active { color: #1e3a8a; border-bottom-color: #1e3a8a; background: #eff6ff; }
+    h2 { font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; border-left: 5px solid #1e3a8a; padding-left: 10px; color: #1e3a8a; background: #eff6ff; }
+    .sub-head { font-weight: bold; margin-top: 15px; margin-bottom: 5px; text-decoration: underline; color: #334155; }
   </style>
 </head>
 <body>
 
   <div id="loginSection" class="login-split">
     <div class="login-left">
-      <h1 class="text-4xl font-bold mb-4 text-center">ระบบรับสมัครนักเรียน</h1>
-      <h2 class="text-2xl opacity-90 mb-8">โรงเรียนบางสะพานวิทยา</h2>
-      <p class="text-blue-200 text-sm">กรุณาเตรียมบัตรประชาชนเพื่อตรวจสอบสิทธิ์</p>
-      
-      <button onclick="toggleLoginMode()" class="mt-10 text-xs text-blue-300 underline hover:text-white">
-        สลับโหมดผู้ใช้งาน (นักเรียน / เจ้าหน้าที่)
-      </button>
+      <h1 class="text-4xl font-bold mb-2">ระบบรับสมัครนักเรียน</h1>
+      <p class="text-xl opacity-90">โรงเรียนบางสะพานวิทยา</p>
+      <div class="mt-8 text-sm text-blue-200 cursor-pointer underline" onclick="toggleRole()">สลับโหมดเจ้าหน้าที่ / นักเรียน</div>
     </div>
-
     <div class="login-right">
-      <div class="w-full max-w-md">
+      <div class="w-full max-w-md space-y-6">
         
-        <div id="boxStudent">
-           <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">นักเรียน: ตรวจสอบสิทธิ์</h3>
-           <form onsubmit="doLogin(event, 'student')" class="space-y-4">
-             <div>
-               <label>เลขประจำตัวประชาชน (13 หลัก)</label>
-               <input type="text" id="loginUser" maxlength="13" class="text-center text-xl tracking-widest bg-gray-50" placeholder="xxxxxxxxxxxxx" required>
-             </div>
-             <button type="submit" id="btnLoginStu" class="w-full bg-blue-900 text-white py-3 rounded-lg font-bold text-lg hover:bg-blue-800 shadow-lg">เข้าสู่ระบบ</button>
-           </form>
+        <div id="roleStudent">
+          <h3 class="text-2xl font-bold text-gray-800 text-center mb-6">เข้าสู่ระบบ (นักเรียน)</h3>
+          <form onsubmit="handleLogin(event, 'student')" class="space-y-4">
+            <div><label class="block font-bold mb-1">เลขประจำตัวประชาชน</label>
+            <input type="text" id="loginUser" maxlength="13" class="w-full p-3 border rounded text-center text-xl tracking-widest bg-gray-50" placeholder="xxxxxxxxxxxxx" required></div>
+            <button type="submit" id="btnStu" class="w-full bg-blue-900 text-white py-3 rounded hover:bg-blue-800 font-bold">ตรวจสอบสิทธิ์</button>
+          </form>
         </div>
 
-        <div id="boxAdmin" class="hidden">
-           <h3 class="text-2xl font-bold text-red-800 mb-6 text-center">เจ้าหน้าที่: เข้าสู่ระบบ</h3>
-           <form onsubmit="doLogin(event, 'admin')" class="space-y-4 border p-6 rounded-xl">
-             <div><label>Username</label><input type="text" id="admUser" placeholder="admin"></div>
-             <div><label>Password</label><input type="password" id="admPass" placeholder="••••"></div>
-             <button type="submit" id="btnLoginAdm" class="w-full bg-red-800 text-white py-3 rounded-lg font-bold shadow-lg hover:bg-red-700">Login</button>
-           </form>
+        <div id="roleAdmin" class="hidden">
+          <h3 class="text-2xl font-bold text-red-800 text-center mb-6">เข้าสู่ระบบ (เจ้าหน้าที่)</h3>
+          <form onsubmit="handleLogin(event, 'admin')" class="space-y-4">
+            <div><label>Username</label><input type="text" id="admUser" class="w-full p-2 border rounded"></div>
+            <div><label>Password</label><input type="password" id="admPass" class="w-full p-2 border rounded"></div>
+            <button type="submit" id="btnAdm" class="w-full bg-red-800 text-white py-3 rounded hover:bg-red-700 font-bold">Login</button>
+          </form>
         </div>
 
       </div>
     </div>
   </div>
 
-  <div id="adminSection" class="hidden max-w-7xl mx-auto p-6">
-     <div class="bg-white rounded-xl shadow-lg overflow-hidden min-h-[80vh]">
-        <div class="bg-gray-800 text-white p-5 flex justify-between items-center">
-           <h2 class="text-xl font-bold">⚙️ Admin Dashboard</h2>
-           <button onclick="location.reload()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-bold">Log Out</button>
-        </div>
+  <div id="adminSection" class="hidden min-h-screen p-6">
+    <div class="max-w-7xl mx-auto bg-white rounded shadow-lg overflow-hidden">
+       <div class="bg-gray-800 text-white p-4 flex justify-between items-center">
+         <h1 class="text-xl font-bold">Admin Dashboard</h1>
+         <button onclick="location.reload()" class="text-sm bg-red-600 px-3 py-1 rounded">Logout</button>
+       </div>
+       
+       <div class="flex border-b">
+         <button onclick="tab('list')" class="px-6 py-3 font-bold text-blue-900 bg-blue-50">รายชื่อผู้สมัคร</button>
+         <button onclick="tab('import')" class="px-6 py-3 font-bold text-gray-500 hover:bg-gray-50">นำเข้าสิทธิ์ (Excel)</button>
+       </div>
 
-        <div class="flex border-b bg-gray-50 px-4 gap-2 pt-2">
-           <div onclick="switchTab('list')" id="tab-list" class="tab-btn active">📄 รายชื่อผู้สมัคร</div>
-           <div onclick="switchTab('add')" id="tab-add" class="tab-btn">➕ เพิ่มสิทธิ์ (รายคน)</div>
-           <div onclick="switchTab('import')" id="tab-import" class="tab-btn">📥 นำเข้า Excel</div>
-        </div>
+       <div id="tab-list" class="p-6">
+         <table class="w-full text-left text-sm">
+           <thead class="bg-gray-100 uppercase"><tr><th class="p-3">เวลา</th><th class="p-3">ID</th><th class="p-3">ชื่อ-สกุล</th><th class="p-3">แผนฯ</th><th class="p-3">สถานะ</th><th class="p-3">Action</th></tr></thead>
+           <tbody id="tbList"></tbody>
+         </table>
+       </div>
 
-        <div id="view-list" class="p-6">
-           <div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-100 font-bold text-gray-700"><tr><th class="p-3">ID</th><th class="p-3">ชื่อ</th><th class="p-3">ระดับ</th><th class="p-3">PDF</th><th class="p-3">Action</th></tr></thead><tbody id="tbodyList"></tbody></table></div>
-        </div>
-
-        <div id="view-add" class="p-8 hidden flex justify-center">
-           <div class="bg-gray-50 p-8 rounded border max-w-md w-full">
-              <h3 class="font-bold text-center mb-4">เพิ่มสิทธิ์รายคน</h3>
-              <input id="addId" class="mb-3 w-full p-2 border rounded" placeholder="เลขบัตรประชาชน" maxlength="13">
-              <input id="addName" class="mb-3 w-full p-2 border rounded" placeholder="ชื่อ-นามสกุล">
-              <button onclick="addSingle()" class="w-full bg-green-600 text-white p-2 rounded font-bold">บันทึก</button>
-           </div>
-        </div>
-
-        <div id="view-import" class="p-8 hidden text-center">
-           <div class="border-2 border-dashed border-blue-300 p-10 rounded-xl cursor-pointer hover:bg-blue-50" onclick="document.getElementById('fileIn').click()">
-              <input type="file" id="fileIn" class="hidden" onchange="readExcel(this)">
-              <div class="text-4xl mb-2">📊</div>
-              <p class="font-bold text-gray-600">คลิกเลือกไฟล์ Excel หรือลากวาง</p>
-              <p class="text-xs text-gray-400">Column A=ID, B=Name</p>
-           </div>
-           <div id="previewArea" class="hidden mt-4">
-              <p class="font-bold text-green-600">พร้อมนำเข้า <span id="countPreview">0</span> รายการ</p>
-              <button onclick="runImport()" class="mt-2 bg-blue-900 text-white px-6 py-2 rounded shadow">ยืนยันการนำเข้า</button>
-           </div>
-        </div>
-     </div>
+       <div id="tab-import" class="p-6 hidden text-center">
+         <input type="file" id="fileIn" class="border p-2" onchange="previewExcel(this)">
+         <button onclick="uploadExcel()" class="bg-green-600 text-white px-4 py-2 rounded ml-2">Upload</button>
+         <div id="previewCount" class="mt-2 text-gray-600"></div>
+       </div>
+    </div>
   </div>
 
-  <div id="formSection" class="hidden max-w-5xl mx-auto p-4 pb-20">
+  <div id="formSection" class="hidden py-8">
     
-    <div id="adminBar" class="hidden sticky top-0 z-50 bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 flex justify-between shadow-md">
-       <span class="font-bold text-yellow-800">⚠️ โหมดแอดมินแก้ไขข้อมูล</span>
-       <button onclick="exitAdminEdit()" class="bg-white px-3 py-1 rounded text-sm border hover:bg-gray-50">ปิด</button>
+    <div id="adminEditBar" class="hidden fixed top-0 left-0 w-full bg-yellow-400 text-yellow-900 text-center py-2 font-bold z-50 shadow-md">
+       ⚠️ คุณกำลังอยู่ในโหมดเจ้าหน้าที่แก้ไขข้อมูล <button onclick="closeEdit()" class="ml-4 bg-white border px-2 text-sm rounded">ปิด</button>
     </div>
 
-    <form id="appForm" onsubmit="saveForm(event)">
-      
-      <div class="paper">
-         <div class="text-center border-b pb-4 mb-6">
-            <h1 class="text-3xl font-bold text-blue-900">ใบสมัครเข้าเรียน</h1>
-            <p class="text-gray-500">โรงเรียนบางสะพานวิทยา</p>
+    <form id="appForm" onsubmit="submitForm(event)" class="space-y-6">
+
+      <div class="paper-page">
+         <span class="page-num">หน้า 1</span>
+         <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold">ใบสมัครเข้าเรียน</h1>
+            <p>โรงเรียนบางสะพานวิทยา</p>
          </div>
 
-         <div class="bg-blue-50 p-4 rounded mb-6 border border-blue-200">
-            <label class="text-lg text-blue-900 mb-2">ระดับชั้นที่สมัคร</label>
-            <select id="apply_level" name="apply_level" required class="font-bold text-lg">
-               <option value="">-- เลือก --</option>
-               <option value="ม.1">มัธยมศึกษาปีที่ 1</option>
-               <option value="ม.4">มัธยมศึกษาปีที่ 4</option>
-            </select>
+         <h2>ข้อมูลเบื้องต้น</h2>
+         <div class="grid md:grid-cols-2 gap-6 mb-4">
+            <div>
+               <label class="font-bold">สถานะพื้นที่:</label>
+               <div class="ml-2 mt-2 space-y-1">
+                  <label class="check-item"><input type="radio" name="area_status" value="ในเขต"> อยู่ในเขตพื้นที่บริการ (ต.กำเนิดนพคุณ ฯลฯ)</label>
+                  <label class="check-item"><input type="radio" name="area_status" value="นอกเขต"> อยู่นอกเขตพื้นที่บริการ</label>
+               </div>
+            </div>
+            <div>
+               <label class="font-bold">กำลังศึกษาอยู่โรงเรียน:</label>
+               <input type="text" name="old_school" class="line-input">
+            </div>
          </div>
 
-         <div class="section-head">ข้อมูลการสมัคร</div>
-         <div class="input-row">
-            <div class="input-col"><label>สถานะพื้นที่</label><select name="area_status"><option>ในเขตพื้นที่บริการ</option><option>นอกเขตพื้นที่บริการ</option></select></div>
-            <div class="input-col"><label>โรงเรียนเดิม</label><input type="text" name="old_school"></div>
-         </div>
-         <div class="input-row">
-            <div class="input-col"><label>แผนการเรียน</label><select name="program_select"><option>วิทย์-คณิต</option><option>EIS</option><option>S&M</option><option>ทั่วไป</option></select></div>
-         </div>
-
-         <div class="section-head">หลักฐานประกอบการสมัคร</div>
-         <div class="bg-gray-50 p-4 rounded border check-list">
-            <label><input type="checkbox" name="docs" value="ทะเบียนบ้านนักเรียน"> 1. ทะเบียนบ้านนักเรียน</label>
-            <label><input type="checkbox" name="docs" value="สูติบัตร"> 2. สูติบัตร</label>
-            <label><input type="checkbox" name="docs" value="ทะเบียนบ้านบิดา"> 3. ทะเบียนบ้านบิดา</label>
-            <label><input type="checkbox" name="docs" value="ทะเบียนบ้านมารดา"> 4. ทะเบียนบ้านมารดา</label>
-            <label><input type="checkbox" name="docs" value="ปพ.1"> 5. ปพ.1 / ปพ.7</label>
+         <div class="mb-4">
+            <label class="font-bold">ประเภทห้องเรียนที่สมัคร (เลือก 1 รายการ):</label>
+            <div class="grid grid-cols-2 gap-2 mt-2 ml-2">
+               <label class="check-item"><input type="radio" name="program_select" value="วิทย์-คณิต"> ห้องเรียนวิทย์ - คณิต</label>
+               <label class="check-item"><input type="radio" name="program_select" value="EIS"> ห้องเรียน EIS</label>
+               <label class="check-item"><input type="radio" name="program_select" value="S&M"> ห้องเรียน S&M</label>
+               <label class="check-item"><input type="radio" name="program_select" value="GATE"> ห้องเรียน GATE</label>
+            </div>
          </div>
 
-         <div class="section-head">(1) รายละเอียดส่วนตัว</div>
-         <div class="input-row">
-            <div class="input-col"><label>คำนำหน้า</label><select name="prefix"><option>ด.ช.</option><option>ด.ญ.</option><option>นาย</option><option>น.ส.</option></select></div>
-            <div class="input-col"><label>ชื่อ(ไทย)</label><input type="text" name="name_th"></div>
-            <div class="input-col"><label>นามสกุล(ไทย)</label><input type="text" name="surname_th"></div>
+         <div class="mb-6 p-4 border rounded bg-gray-50">
+            <label class="font-bold block mb-2">หลักฐานประกอบการสมัคร (Checklist)</label>
+            <div class="grid grid-cols-1 gap-2 text-sm">
+               <label class="check-item"><input type="checkbox" name="docs" value="ทะเบียนบ้านนักเรียน"> 1. สำเนาทะเบียนบ้านนักเรียน</label>
+               <label class="check-item"><input type="checkbox" name="docs" value="สูติบัตร"> 2. สำเนาสูติบัตรนักเรียน</label>
+               <label class="check-item"><input type="checkbox" name="docs" value="ทะเบียนบ้านบิดา"> 3. สำเนาทะเบียนบ้านบิดา</label>
+               <label class="check-item"><input type="checkbox" name="docs" value="ทะเบียนบ้านมารดา"> 4. สำเนาทะเบียนบ้านมารดา</label>
+               <label class="check-item"><input type="checkbox" name="docs" value="ทะเบียนบ้านผู้ปกครอง"> 5. สำเนาทะเบียนบ้านของผู้ปกครอง</label>
+               <label class="check-item"><input type="checkbox" name="docs" value="ปพ.1"> 6. ใบรับรองผลการศึกษา (ปพ.7 หรือ ปพ.1)</label>
+               <div class="flex items-center gap-2">
+                  <input type="checkbox" name="docs" value="อื่นๆ"> 7. อื่นๆ (ระบุ) <input type="text" name="doc_other_detail" class="line-input w-1/2">
+               </div>
+            </div>
          </div>
-         <div class="input-row">
-            <div class="input-col"><label>เลขบัตรประชาชน</label><input type="text" id="idCard" name="idCard" readonly class="bg-gray-100 cursor-not-allowed"></div>
-            <div class="input-col"><label>วันเกิด</label><input type="date" name="dob"></div>
+
+         <h2>(1) รายละเอียดส่วนตัว</h2>
+         <div class="flex flex-wrap gap-4 mb-2">
+            <div class="w-32">คำนำหน้า <select name="prefix" class="line-input"><option>ด.ช.</option><option>ด.ญ.</option><option>นาย</option><option>น.ส.</option></select></div>
+            <div class="flex-1">ชื่อ <input type="text" name="name_th" class="line-input"></div>
+            <div class="flex-1">นามสกุล <input type="text" name="surname_th" class="line-input"></div>
          </div>
-         <div class="input-row">
-            <div class="input-col"><label>หมู่เลือด</label><input type="text" name="blood"></div>
-            <div class="input-col"><label>สัญชาติ</label><input type="text" name="nation"></div>
-            <div class="input-col"><label>เชื้อชาติ</label><input type="text" name="race"></div>
-            <div class="input-col"><label>ศาสนา</label><input type="text" name="religion"></div>
+         <div class="flex flex-wrap gap-4 mb-2">
+            <div class="flex-1">Name (Eng) <input type="text" name="name_en" class="line-input"></div>
+            <div class="flex-1">Surname (Eng) <input type="text" name="surname_en" class="line-input"></div>
+         </div>
+         <div class="flex flex-wrap gap-4 mb-2">
+            <div class="flex-1">เลขประจำตัวประชาชน <input type="text" id="idCard" name="idCard" readonly class="line-input bg-gray-100"></div>
+            <div class="flex-1">วัน/เดือน/ปีเกิด <input type="date" name="dob" class="line-input"></div>
+         </div>
+         <div class="mb-2">
+            สถานที่เกิด: รพ.<input type="text" name="birth_hosp" class="line-input w-24"> 
+            ต.<input type="text" name="birth_tumbon" class="line-input w-24"> 
+            อ.<input type="text" name="birth_amphoe" class="line-input w-24"> 
+            จ.<input type="text" name="birth_province" class="line-input w-24">
+         </div>
+         <div class="flex gap-2">
+            <span class="w-1/4">หมู่เลือด <input name="blood" class="line-input w-12"></span>
+            <span class="w-1/4">สัญชาติ <input name="nation" class="line-input w-16"></span>
+            <span class="w-1/4">เชื้อชาติ <input name="race" class="line-input w-16"></span>
+            <span class="w-1/4">ศาสนา <input name="religion" class="line-input w-16"></span>
          </div>
       </div>
 
-      <div class="paper">
-         <div class="section-head">(2) ข้อมูลที่อยู่</div>
-         <h4 class="font-bold border-b mb-3">🏠 ทะเบียนบ้าน</h4>
-         <div class="input-row">
-            <div class="input-col"><label>บ้านเลขที่</label><input type="text" name="reg_no"></div>
-            <div class="input-col"><label>หมู่ที่</label><input type="text" name="reg_moo"></div>
-            <div class="input-col"><label>ตำบล</label><input type="text" name="reg_tum"></div>
-            <div class="input-col"><label>อำเภอ</label><input type="text" name="reg_amp"></div>
-            <div class="input-col"><label>จังหวัด</label><input type="text" name="reg_prov"></div>
-         </div>
+      <div class="paper-page">
+         <span class="page-num">หน้า 2</span>
+         <h2>(2) รายละเอียดเกี่ยวกับที่อยู่</h2>
          
-         <h4 class="font-bold border-b mb-3 mt-6">📍 ปัจจุบัน & การติดต่อ</h4>
-         <div class="input-row">
-            <div class="input-col"><label>เบอร์โทรศัพท์นักเรียน</label><input type="text" name="phone_student" required></div>
+         <div class="sub-head">ที่อยู่ตามทะเบียนบ้าน</div>
+         <div class="grid grid-cols-1 gap-2 mb-4">
+            <div>รหัสประจำบ้าน: <input name="reg_house_code" class="line-input w-1/2"></div>
+            <div>
+               บ้านเลขที่ <input name="reg_no" class="line-input w-16"> 
+               หมู่ที่ <input name="reg_moo" class="line-input w-12"> 
+               ถนน/ซอย <input name="reg_road" class="line-input w-1/2">
+            </div>
+            <div>
+               ตำบล <input name="reg_tum" class="line-input w-32"> 
+               อำเภอ <input name="reg_amp" class="line-input w-32"> 
+               จังหวัด <input name="reg_prov" class="line-input w-32">
+            </div>
+            <div>
+               รหัสไปรษณีย์ <input name="reg_zip" class="line-input w-24"> 
+               โทรศัพท์ <input name="reg_phone" class="line-input w-40">
+            </div>
          </div>
 
-         <div class="section-head">(3) ข้อมูลอื่นๆ</div>
-         <div class="input-row">
-            <div class="input-col check-list">
-               <label class="font-bold block mb-2">ความขาดแคลน</label>
-               <label><input type="checkbox" name="lacking" value="แบบเรียน"> ขาดแบบเรียน</label>
-               <label><input type="checkbox" name="lacking" value="เครื่องแบบ"> ขาดเครื่องแบบ</label>
-               <label><input type="checkbox" name="lacking" value="อาหาร"> ขาดอาหารกลางวัน</label>
+         <div class="sub-head">ที่อยู่ปัจจุบันของนักเรียน</div>
+         <div class="grid grid-cols-1 gap-2 mb-6">
+            <div>รหัสประจำบ้าน: <input name="cur_house_code" class="line-input w-1/2"></div>
+            <div>
+               บ้านเลขที่ <input name="cur_no" class="line-input w-16"> 
+               หมู่ที่ <input name="cur_moo" class="line-input w-12"> 
+               ถนน/ซอย <input name="cur_road" class="line-input w-1/2">
             </div>
-            <div class="input-col">
-               <label>รายได้ครอบครัว (บาท/เดือน)</label><input type="number" name="income_total">
-               <label class="mt-2">จำนวนสมาชิก (คน)</label><input type="number" name="income_mem">
+            <div>
+               ตำบล <input name="cur_tum" class="line-input w-32"> 
+               อำเภอ <input name="cur_amp" class="line-input w-32"> 
+               จังหวัด <input name="cur_prov" class="line-input w-32">
             </div>
+            <div>
+               รหัสไปรษณีย์ <input name="cur_zip" class="line-input w-24"> 
+               โทรศัพท์ <input name="phone_student" required class="line-input w-40 bg-yellow-50">
+            </div>
+         </div>
+
+         <h2>(3) รายละเอียดนักเรียน</h2>
+         <div class="grid md:grid-cols-2 gap-6">
+            <div>
+               <div class="font-bold">การพักนอน:</div>
+               <div class="ml-2">
+                  <label class="check-item"><input type="radio" name="living_status" value="บิดามารดา"> อาศัยอยู่กับบิดามารดา</label>
+                  <label class="check-item"><input type="radio" name="living_status" value="ญาติ"> อาศัยอยู่กับญาติ</label>
+                  <label class="check-item"><input type="radio" name="living_status" value="อื่นๆ"> อื่นๆ (ระบุ) <input name="living_other" class="line-input w-32"></label>
+               </div>
+            </div>
+            <div>
+               <div class="font-bold">ความด้อยโอกาส/รายได้:</div>
+               <div class="text-sm space-y-2">
+                  <div>รายได้รวม <input name="fam_income_total" type="number" class="line-input w-24"> บาท/เดือน</div>
+                  <div>สมาชิก <input name="fam_members" type="number" class="line-input w-16"> คน</div>
+                  <div>เฉลี่ย <input name="fam_income_avg" type="number" class="line-input w-24"> บาท/คน</div>
+                  <label class="check-item mt-2"><input type="radio" name="poverty_status" value="ยากจน"> ยากจน (เฉลี่ย <= 3,000)</label>
+                  <label class="check-item"><input type="radio" name="poverty_status" value="ไม่ยากจน"> ไม่ยากจน (เฉลี่ย > 3,000)</label>
+               </div>
+            </div>
+         </div>
+
+         <div class="mt-4">
+            <div class="font-bold">ความขาดแคลน:</div>
+            <div class="flex flex-wrap gap-4 ml-2">
+               <label class="check-item"><input type="checkbox" name="lacking" value="แบบเรียน"> ขาดแคลนแบบเรียน</label>
+               <label class="check-item"><input type="checkbox" name="lacking" value="เครื่องแบบ"> ขาดแคลนเครื่องแบบ</label>
+               <label class="check-item"><input type="checkbox" name="lacking" value="อาหารกลางวัน"> ขาดแคลนอาหารกลางวัน</label>
+               <label class="check-item"><input type="checkbox" name="lacking" value="ไม่ขาดแคลน"> ไม่ขาดแคลน</label>
+            </div>
+         </div>
+
+         <div class="mt-4 border-t pt-2">
+            <div class="font-bold">การเดินทาง:</div>
+            <div class="flex gap-4 mb-2">
+               <label class="check-item"><input type="radio" name="commute_type" value="เดินเท้า"> เดินเท้า</label>
+               <label class="check-item"><input type="radio" name="commute_type" value="ไม่เสียค่าโดยสาร"> ไม่เสียค่าโดยสาร</label>
+               <label class="check-item"><input type="radio" name="commute_type" value="เสียค่าโดยสาร"> เสียค่าโดยสาร</label>
+            </div>
+            <div>ใช้เวลา <input name="commute_time" class="line-input w-16"> นาที</div>
+            <div>ระยะทาง (ลูกรัง) <input name="dist_dirt" class="line-input w-16"> ม. (ลาดยาง/คอนกรีต) <input name="dist_road" class="line-input w-16"> ม.</div>
+         </div>
+
+         <h2>(4) สุขภาพนักเรียน</h2>
+         <div class="flex gap-8">
+            <div>น้ำหนัก <input name="weight" type="number" class="line-input w-24"> กก.</div>
+            <div>ส่วนสูง <input name="height" type="number" class="line-input w-24"> ซม.</div>
          </div>
       </div>
 
-      <div class="paper">
-         <div class="section-head">(4) สุขภาพ & ครอบครัว</div>
-         <div class="input-row">
-            <div class="input-col"><label>น้ำหนัก (กก.)</label><input type="number" name="weight"></div>
-            <div class="input-col"><label>ส่วนสูง (ซม.)</label><input type="number" name="height"></div>
-         </div>
+      <div class="paper-page">
+         <span class="page-num">หน้า 3</span>
+         <h2>(5) ข้อมูลเกี่ยวกับครอบครัว</h2>
          
-         <div class="input-row">
-            <div class="input-col"><label>สถานภาพบิดามารดา</label><select name="parent_status"><option>อยู่ด้วยกัน</option><option>หย่าร้าง</option><option>แยกกันอยู่</option></select></div>
+         <div class="mb-4">
+             <label class="font-bold">สถานภาพบิดา มารดา:</label>
+             <select name="parents_status" class="box-input w-full md:w-1/2">
+                <option value="">-- เลือก --</option>
+                <option>จดทะเบียนสมรส</option><option>ไม่ได้จดทะเบียนสมรส</option><option>หย่าร้าง</option>
+                <option>แยกกันอยู่</option><option>บิดาถึงแก่กรรม</option><option>มารดาถึงแก่กรรม</option><option>บิดามารดาถึงแก่กรรม</option>
+             </select>
          </div>
 
-         <div class="bg-gray-50 p-4 rounded mb-4">
-            <h4 class="font-bold text-blue-800 mb-2">ข้อมูลบิดา</h4>
-            <div class="input-row">
-               <div class="input-col"><input placeholder="ชื่อ-สกุล" name="dad_name"></div>
-               <div class="input-col"><input placeholder="เบอร์โทร" name="dad_phone"></div>
-            </div>
+         <div class="mb-4 p-3 bg-gray-50 border rounded">
+             <div class="font-bold mb-2">ข้อมูลพี่น้อง:</div>
+             <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
+                <div>พี่ชาย <input name="sib_bro_old" type="number" class="line-input w-10"> คน</div>
+                <div>พี่สาว <input name="sib_sis_old" type="number" class="line-input w-10"> คน</div>
+                <div>น้องชาย <input name="sib_bro_yng" type="number" class="line-input w-10"> คน</div>
+                <div>น้องสาว <input name="sib_sis_yng" type="number" class="line-input w-10"> คน</div>
+                <div>นร.เป็นบุตรคนที่ <input name="child_order" type="number" class="line-input w-10"></div>
+             </div>
+             <div class="mt-2 text-sm">พี่น้องที่ศึกษาอยู่ (ไม่รวมนักเรียน) <input name="sib_studying" type="number" class="line-input w-12"> คน</div>
          </div>
-         <div class="bg-gray-50 p-4 rounded">
-            <h4 class="font-bold text-pink-800 mb-2">ข้อมูลมารดา</h4>
-            <div class="input-row">
-               <div class="input-col"><input placeholder="ชื่อ-สกุล" name="mom_name"></div>
-               <div class="input-col"><input placeholder="เบอร์โทร" name="mom_phone"></div>
+
+         <div class="sub-head text-blue-800">ข้อมูลบิดา (ตามสูติบัตร)</div>
+         <div class="grid gap-2 text-sm">
+             <div>เลขบัตร ปชช: <input name="father_id" class="line-input w-1/2"></div>
+             <div>ชื่อ-สกุล: <input name="father_name" class="line-input w-3/4"></div>
+             <div>เชื้อชาติ <input name="father_race" class="line-input w-16"> สัญชาติ <input name="father_nat" class="line-input w-16"> ศาสนา <input name="father_rel" class="line-input w-16"> เลือด <input name="father_blood" class="line-input w-12"></div>
+             <div>อาชีพ <input name="father_job" class="line-input w-32"> รายได้ <input name="father_income" class="line-input w-24"> บาท/เดือน</div>
+             <div>เบอร์โทร <input name="father_phone" class="line-input w-40"></div>
+         </div>
+
+         <div class="sub-head text-pink-800 mt-4">ข้อมูลมารดา (ตามสูติบัตร)</div>
+         <div class="grid gap-2 text-sm">
+             <div>เลขบัตร ปชช: <input name="mother_id" class="line-input w-1/2"></div>
+             <div>ชื่อ-สกุล: <input name="mother_name" class="line-input w-3/4"></div>
+             <div>เชื้อชาติ <input name="mother_race" class="line-input w-16"> สัญชาติ <input name="mother_nat" class="line-input w-16"> ศาสนา <input name="mother_rel" class="line-input w-16"> เลือด <input name="mother_blood" class="line-input w-12"></div>
+             <div>อาชีพ <input name="mother_job" class="line-input w-32"> รายได้ <input name="mother_income" class="line-input w-24"> บาท/เดือน</div>
+             <div>เบอร์โทร <input name="mother_phone" class="line-input w-40"></div>
+         </div>
+
+         <div class="sub-head text-gray-800 mt-4">ข้อมูลผู้ปกครอง (กรณีไม่ได้อยู่กับพ่อแม่)</div>
+         <div class="grid gap-2 text-sm">
+             <div>เกี่ยวข้องเป็น <input name="guard_relation" class="line-input w-32"> ของนักเรียน</div>
+             <div>ชื่อ-สกุล: <input name="guard_name" class="line-input w-3/4"></div>
+             <div>อาชีพ <input name="guard_job" class="line-input w-32"> รายได้ <input name="guard_income" class="line-input w-24"> บาท/เดือน</div>
+             <div>เบอร์โทร <input name="guard_phone" class="line-input w-40"></div>
+         </div>
+
+         <div class="mt-4 p-2 bg-yellow-50 border">
+            ผู้ที่ทำหน้าที่ผู้ปกครองขณะเรียน: 
+            <label class="inline-flex items-center ml-2"><input type="radio" name="current_guardian" value="บิดา"> บิดา</label>
+            <label class="inline-flex items-center ml-2"><input type="radio" name="current_guardian" value="มารดา"> มารดา</label>
+            <label class="inline-flex items-center ml-2"><input type="radio" name="current_guardian" value="อื่นๆ"> อื่นๆ</label>
+         </div>
+
+         <div class="mt-8 text-center">
+            <p>ลงชื่อนักเรียนผู้สมัคร .....................................................................</p>
+            <p class="mt-2">( ..................................................................... )</p>
+            <p class="mt-2">วันที่ยื่นใบสมัคร <input type="date" name="student_sign_date" class="border p-1"></p>
+         </div>
+      </div>
+
+      <div id="page4_admin" class="paper-page border-4 border-red-500 hidden">
+         <span class="page-num">หน้า 4 (สำหรับเจ้าหน้าที่)</span>
+         <h2 class="bg-red-100 text-red-900 border-red-800">ผลการตรวจสอบความถูกต้อง</h2>
+         
+         <div class="space-y-4 p-4">
+            <label class="block p-3 bg-green-50 border border-green-200 rounded cursor-pointer">
+               <input type="radio" name="admin_check_result" value="ผ่าน" class="transform scale-150 mr-2"> 
+               <span class="font-bold text-green-900">นักเรียนกรอกข้อมูลถูกต้อง และมีหลักฐานครบถ้วน (ผ่าน)</span>
+            </label>
+            
+            <label class="block p-3 bg-red-50 border border-red-200 rounded cursor-pointer">
+               <input type="radio" name="admin_check_result" value="ไม่ผ่าน" class="transform scale-150 mr-2">
+               <span class="font-bold text-red-900">นักเรียนกรอกข้อมูลถูกต้อง แต่ยังขาดหลักฐาน ดังนี้:</span>
+               <textarea name="admin_check_missing_detail" class="w-full mt-2 p-2 border rounded" placeholder="ระบุสิ่งที่ขาด..."></textarea>
+            </label>
+         </div>
+
+         <div class="grid md:grid-cols-2 gap-8 mt-8">
+            <div class="text-center border p-4">
+               <p>ลงชื่อเจ้าหน้าที่ตรวจหลักฐาน</p>
+               <input name="staff_check_name" class="line-input text-center mt-4" placeholder="ลงชื่อครูผู้ตรวจ">
+               <div class="mt-2">วันที่ <input type="date" name="staff_check_date"></div>
+            </div>
+            <div class="text-center border p-4">
+               <p>ลงชื่อเจ้าหน้าที่รับสมัคร</p>
+               <input name="staff_rec_name" class="line-input text-center mt-4" placeholder="ลงชื่อครูผู้รับสมัคร">
+               <div class="mt-2">วันที่ <input type="date" name="staff_rec_date"></div>
             </div>
          </div>
       </div>
 
-      <div class="fixed bottom-0 left-0 w-full bg-white p-4 shadow-inner flex justify-center gap-4 z-50">
-         <button type="submit" id="btnSave" class="bg-blue-900 text-white px-10 py-3 rounded-full font-bold shadow-lg hover:bg-blue-800 transform hover:scale-105 transition">
-           💾 บันทึกใบสมัคร
+      <div class="fixed bottom-0 left-0 w-full bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 flex justify-center z-40">
+         <button type="submit" id="btnSave" class="bg-blue-900 text-white text-xl font-bold py-3 px-12 rounded-full hover:bg-blue-800 shadow-lg transform transition hover:scale-105">
+            💾 บันทึกใบสมัคร
          </button>
-         <a id="btnPDF" href="#" target="_blank" class="hidden bg-green-600 text-white px-10 py-3 rounded-full font-bold shadow-lg hover:bg-green-700 flex items-center gap-2">
-           📄 พิมพ์ PDF
-         </a>
       </div>
-      <div class="h-16"></div> </form>
+      <div class="h-20"></div>
+
+    </form>
   </div>
 
   <script>
-    // ==========================================
-    // 🔴🔴 ใส่ URL Deploy ของคุณตรงนี้ 🔴🔴
+    // 🔴🔴 URL SCRIPT ของคุณ 🔴🔴
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtWZwXSFcbdrrPZSLrs4kmEDYB4fqx3MxUs0Wo40lgkAyIi_6C-j0AJ3YZgWOBJ16AHw/exec'; 
-    // ==========================================
 
     let allData = [];
     let importData = [];
 
-    function toggleLoginMode() {
-       document.getElementById('boxStudent').classList.toggle('hidden');
-       document.getElementById('boxAdmin').classList.toggle('hidden');
-    }
-
-    function switchTab(t) {
-       ['list','add','import'].forEach(x => {
-          document.getElementById('view-'+x).classList.add('hidden');
-          document.getElementById('tab-'+x).classList.remove('active');
-       });
-       document.getElementById('view-'+t).classList.remove('hidden');
-       document.getElementById('tab-'+t).classList.add('active');
-    }
-
-    // --- LOGIN ---
-    function doLogin(e, role) {
-       e.preventDefault();
-       const u = role==='student' ? document.getElementById('loginUser').value : document.getElementById('admUser').value;
-       const p = role==='student' ? '' : document.getElementById('admPass').value;
-       const btn = role==='student' ? document.getElementById('btnLoginStu') : document.getElementById('btnLoginAdm');
-       
-       const oldTxt = btn.innerText;
-       btn.innerText = 'Loading...'; btn.disabled = true;
-
-       fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({action:'login', username:u, password:p})})
-       .then(r=>r.json()).then(res => {
-          if(!res.success && res.error) return alert(res.error);
-          
-          document.getElementById('loginSection').classList.add('hidden');
-          
-          if(res.role === 'admin') {
-             document.getElementById('adminSection').classList.remove('hidden');
-             allData = res.data;
-             renderList();
-          } else {
-             document.getElementById('formSection').classList.remove('hidden');
-             document.getElementById('idCard').value = u;
-             if(res.found && res.data) {
-                populateForm(res.data);
-                if(res.data.pdf) showPDFBtn(res.data.pdf);
-                alert('พบข้อมูลเดิม ระบบดึงข้อมูลให้แล้ว');
-             }
-          }
-       })
-       .catch(err => alert('Error: '+err))
-       .finally(() => { btn.innerText = oldTxt; btn.disabled = false; });
-    }
-
-    // --- FORM SAVE ---
-    function saveForm(e) {
-       e.preventDefault();
-       const btn = document.getElementById('btnSave');
-       btn.innerText = '⏳ Saving...'; btn.disabled = true;
-
-       const formData = {};
-       const inputs = document.querySelectorAll('input, select');
-       inputs.forEach(el => {
-          if(el.type === 'checkbox') {
-             if(!formData[el.name]) formData[el.name] = [];
-             if(el.checked) formData[el.name].push(el.value);
-          } else if(el.type === 'radio') {
-             if(el.checked) formData[el.name] = el.value;
-          } else {
-             formData[el.id || el.name] = el.value;
-          }
-       });
-       // Join arrays
-       if(Array.isArray(formData.docs)) formData.docs = formData.docs.join(', ');
-       if(Array.isArray(formData.lacking)) formData.lacking = formData.lacking.join(', ');
-
-       fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({action:'save', data:formData})})
-       .then(r=>r.json()).then(res => {
-          if(res.success) {
-             alert('✅ บันทึกสำเร็จ');
-             showPDFBtn(res.url);
-          } else alert('Error: '+res.error);
-       })
-       .finally(() => { btn.innerText = '💾 บันทึกใบสมัคร'; btn.disabled = false; });
-    }
-
-    function showPDFBtn(url) {
-       const btn = document.getElementById('btnPDF');
-       btn.href = url;
-       btn.classList.remove('hidden');
-    }
-
-    function populateForm(data) {
-       const inputs = document.querySelectorAll('input, select');
-       inputs.forEach(el => {
-          const key = el.id || el.name;
-          if(el.type==='checkbox') {
-             if(data[el.name] && data[el.name].includes(el.value)) el.checked = true;
-          } else {
-             if(data[key]) el.value = data[key];
-          }
-       });
-    }
-
-    // --- ADMIN FUNCS ---
-    function renderList() {
-       const tb = document.getElementById('tbodyList'); tb.innerHTML='';
-       allData.forEach((d, i) => {
-          tb.innerHTML += `<tr class="border-b"><td class="p-3 text-xs">${new Date().toLocaleDateString()}</td><td class="p-3 font-mono font-bold text-blue-700">${d.id}</td><td class="p-3">${d.name}</td><td class="p-3">${d.level||'-'}</td><td class="p-3"><a href="${d.pdf}" target="_blank" class="text-blue-600 underline">PDF</a></td><td class="p-3"><button onclick="editUser(${i})" class="bg-yellow-100 text-yellow-700 px-2 rounded text-xs font-bold">แก้ไข</button></td></tr>`;
-       });
+    function toggleRole() {
+      document.getElementById('roleStudent').classList.toggle('hidden');
+      document.getElementById('roleAdmin').classList.toggle('hidden');
     }
     
-    function editUser(i) {
-       const d = allData[i].full;
+    // --- Login ---
+    function handleLogin(e, role) {
+      e.preventDefault();
+      const u = role==='student' ? document.getElementById('loginUser').value : document.getElementById('admUser').value;
+      const p = role==='student' ? '' : document.getElementById('admPass').value;
+      const btn = role==='student' ? document.getElementById('btnStu') : document.getElementById('btnAdm');
+      
+      const txt = btn.innerText; btn.innerText='Checking...'; btn.disabled=true;
+
+      fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({action:'login', username:u, password:p})})
+      .then(r=>r.json()).then(res => {
+         if(!res.success && res.error) return alert(res.error);
+         
+         document.getElementById('loginSection').classList.add('hidden');
+         
+         if(res.role === 'admin') {
+            document.getElementById('adminSection').classList.remove('hidden');
+            allData = res.data;
+            renderList();
+         } else {
+            document.getElementById('formSection').classList.remove('hidden');
+            document.getElementById('idCard').value = u;
+            if(res.found && res.data) {
+               populate(res.data);
+               alert('ดึงข้อมูลเดิมเรียบร้อย');
+            }
+         }
+      })
+      .catch(e=>alert('Err: '+e))
+      .finally(()=>{ btn.innerText=txt; btn.disabled=false; });
+    }
+
+    // --- Save Form ---
+    function submitForm(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSave');
+      btn.innerText='⏳ กำลังบันทึก...'; btn.disabled=true;
+
+      const fd = {};
+      document.querySelectorAll('input, select, textarea').forEach(el => {
+         if(el.type==='checkbox') {
+            if(!fd[el.name]) fd[el.name]=[];
+            if(el.checked) fd[el.name].push(el.value);
+         } else if(el.type==='radio') {
+            if(el.checked) fd[el.name]=el.value;
+         } else {
+            fd[el.id||el.name] = el.value;
+         }
+      });
+      // Join Arrays
+      if(fd.docs) fd.docs = fd.docs.join(', ');
+      if(fd.lacking) fd.lacking = fd.lacking.join(', ');
+
+      fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({action:'save', data:fd})})
+      .then(r=>r.json()).then(res => {
+         if(res.success) {
+            alert('บันทึกเรียบร้อย!');
+            if(!document.getElementById('adminEditBar').classList.contains('hidden')) closeEdit();
+         } else alert('Error: '+res.error);
+      })
+      .finally(()=>{ btn.innerText='💾 บันทึกใบสมัคร'; btn.disabled=false; });
+    }
+
+    function populate(d) {
+      document.querySelectorAll('input, select, textarea').forEach(el => {
+         if(el.type==='checkbox') {
+             if(d[el.name] && d[el.name].includes(el.value)) el.checked=true;
+         } else if(el.type==='radio') {
+             if(d[el.name] == el.value) el.checked=true;
+         } else {
+             if(d[el.id||el.name]) el.value = d[el.id||el.name];
+         }
+      });
+    }
+
+    // --- Admin Funcs ---
+    function tab(t) {
+       document.getElementById('tab-list').classList.add('hidden');
+       document.getElementById('tab-import').classList.add('hidden');
+       document.getElementById('tab-'+t).classList.remove('hidden');
+    }
+    
+    function renderList() {
+       const tb = document.getElementById('tbList'); tb.innerHTML='';
+       allData.forEach((d, i) => {
+          tb.innerHTML += `<tr class="border-b hover:bg-gray-50">
+            <td class="p-3 text-xs text-gray-500">${new Date().toLocaleDateString()}</td>
+            <td class="p-3 font-mono font-bold text-blue-800">${d.idCard}</td>
+            <td class="p-3">${d.name_th||'-'}</td>
+            <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 rounded text-xs">${d.program_select||'-'}</span></td>
+            <td class="p-3">${d.admin_check_result||'รอ'}</td>
+            <td class="p-3"><button onclick="edit(${i})" class="text-yellow-600 font-bold underline">ตรวจ/แก้</button></td>
+          </tr>`;
+       });
+    }
+
+    function edit(i) {
+       const d = allData[i];
        document.getElementById('adminSection').classList.add('hidden');
        document.getElementById('formSection').classList.remove('hidden');
-       document.getElementById('adminBar').classList.remove('hidden');
-       populateForm(d);
-       if(d.pdf) showPDFBtn(d.pdf);
+       document.getElementById('adminEditBar').classList.remove('hidden');
+       document.getElementById('page4_admin').classList.remove('hidden'); // Show Page 4 for Admin
+       populate(d);
     }
-    function exitAdminEdit() {
+
+    function closeEdit() {
        document.getElementById('appForm').reset();
        document.getElementById('formSection').classList.add('hidden');
        document.getElementById('adminSection').classList.remove('hidden');
-       document.getElementById('adminBar').classList.add('hidden');
-       document.getElementById('btnPDF').classList.add('hidden');
+       document.getElementById('adminEditBar').classList.add('hidden');
+       document.getElementById('page4_admin').classList.add('hidden');
     }
-
-    function addSingle() {
-       const id = document.getElementById('addId').value;
-       const name = document.getElementById('addName').value;
-       fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({action:'appendWhitelist', data:{id,name}})})
-       .then(r=>r.json()).then(res => alert(res.success?'OK':'Error'));
-    }
-
-    function readExcel(inp) {
-       const f = inp.files[0];
+    
+    function previewExcel(inp) {
        const r = new FileReader();
        r.onload = e => {
           const wb = XLSX.read(e.target.result, {type:'array'});
           const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
           importData = rows.map(r=>({id:r[0], name:r[1]})).filter(x=>x.id);
-          document.getElementById('previewBox').classList.remove('hidden');
-          document.getElementById('countRow').innerText = importData.length;
+          document.getElementById('previewCount').innerText = `พบ ${importData.length} รายการ`;
        };
-       r.readAsArrayBuffer(f);
+       r.readAsArrayBuffer(inp.files[0]);
     }
+    
     function uploadExcel() {
-       if(!confirm('ยืนยัน?')) return;
+       if(!confirm('ยืนยันนำเข้า? ข้อมูลเก่าจะถูกล้าง')) return;
        fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({action:'updateWhitelist', listData:importData})})
-       .then(r=>r.json()).then(res=>{ alert('Success'); location.reload(); });
+       .then(r=>r.json()).then(res => { alert('Success'); location.reload(); });
     }
   </script>
 </body>
