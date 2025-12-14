@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบรับสมัครนักเรียน (Import Excel)</title>
+  <title>ระบบรับสมัครนักเรียน (Upload Excel)</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Sarabun', sans-serif; }
     .hidden { display: none !important; }
-    /* สไตล์ฟอร์ม */
+    /* สไตล์ทั่วไป */
     .input-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #1e3a8a; }
     .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
     .section-head { background: #e0f2fe; padding: 10px; font-weight: bold; color: #0c4a6e; border-left: 4px solid #0284c7; margin-top: 20px; margin-bottom: 10px; }
@@ -57,7 +58,7 @@
 
       <div class="flex border-b bg-gray-50">
         <div onclick="switchTab('applicants')" id="tab-applicants" class="tab-btn active">📄 รายการผู้สมัคร (PDF)</div>
-        <div onclick="switchTab('import')" id="tab-import" class="tab-btn">📥 นำเข้าข้อมูล (Excel)</div>
+        <div onclick="switchTab('import')" id="tab-import" class="tab-btn">📥 อัปโหลดไฟล์ (Excel)</div>
       </div>
 
       <div id="view-applicants" class="p-6">
@@ -70,8 +71,7 @@
             <thead class="bg-blue-50 text-blue-900 uppercase text-sm">
               <tr><th class="p-3 border-b">เวลาสมัคร</th><th class="p-3 border-b">เลขบัตร</th><th class="p-3 border-b">ชื่อ-สกุล</th><th class="p-3 border-b text-center">จัดการ</th></tr>
             </thead>
-            <tbody id="adminTableBody" class="bg-white">
-              </tbody>
+            <tbody id="adminTableBody" class="bg-white"></tbody>
           </table>
         </div>
       </div>
@@ -80,22 +80,32 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           <div>
-            <div class="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
-              <h3 class="font-bold text-green-900 mb-2 text-lg">วิธีนำเข้าข้อมูล</h3>
-              <ul class="list-disc pl-5 text-sm text-green-800 space-y-1">
-                <li>เปิดไฟล์ Excel รายชื่อนักเรียน</li>
-                <li>คลุมดำ 2 คอลัมน์: <b>(คอลัมน์ A: เลขบัตร)</b> และ <b>(คอลัมน์ B: ชื่อ-สกุล)</b></li>
-                <li>กด Copy (Ctrl+C) แล้วมา Paste (Ctrl+V) ในกล่องด้านล่าง</li>
+            <div class="bg-green-50 p-4 rounded-lg border border-green-200 mb-6">
+              <h3 class="font-bold text-green-900 mb-2 text-lg">📝 วิธีเตรียมไฟล์ Excel</h3>
+              <ul class="list-disc pl-5 text-sm text-green-800 space-y-2">
+                <li>ใช้ไฟล์ <b>.xlsx</b> หรือ <b>.xls</b></li>
+                <li><b>คอลัมน์ A (ช่องแรก):</b> ใส่เลขบัตรประชาชน (13 หลัก)</li>
+                <li><b>คอลัมน์ B (ช่องสอง):</b> ใส่ชื่อ-นามสกุล</li>
+                <li>ไม่ต้องมีหัวตารางก็ได้ ระบบจะเริ่มอ่านตั้งแต่บรรทัดแรก</li>
               </ul>
             </div>
             
-            <label class="block font-bold mb-2">วางข้อมูลที่นี่:</label>
-            <textarea id="excelPasteArea" class="w-full h-64 p-3 border-2 border-dashed border-gray-400 rounded-lg font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-gray-50" placeholder="ตัวอย่าง:&#10;1103700123456	เด็กชายรักเรียน ขยันยิ่ง&#10;1770400890123	เด็กหญิงมานะ อดทน"></textarea>
-            
-            <div class="flex gap-3 mt-3">
-              <button onclick="previewExcelData()" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 font-bold w-1/2">1. ตรวจสอบข้อมูล</button>
-              <button onclick="clearImport()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 w-1/2">ล้างค่า</button>
+            <label class="block font-bold mb-2 text-lg">เลือกไฟล์ Excel ที่นี่:</label>
+            <div class="flex items-center justify-center w-full">
+                <label for="excelFile" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                        </svg>
+                        <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">คลิกเพื่อเลือกไฟล์</span> หรือลากไฟล์มาวาง</p>
+                        <p class="text-xs text-gray-500">รองรับ .XLSX, .XLS</p>
+                    </div>
+                    <input id="excelFile" type="file" class="hidden" accept=".xlsx, .xls" onchange="handleFileUpload(event)" />
+                </label>
             </div>
+            <div id="fileNameDisplay" class="mt-2 text-center text-blue-600 font-bold hidden"></div>
+            
+            <button onclick="clearImport()" class="mt-4 w-full bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">ยกเลิก / ล้างค่า</button>
           </div>
 
           <div class="flex flex-col h-full">
@@ -107,18 +117,18 @@
             <div class="flex-grow border rounded-lg overflow-y-auto bg-gray-50 h-64 lg:h-auto relative">
               <table class="w-full text-sm">
                 <thead class="bg-gray-200 sticky top-0">
-                  <tr><th class="p-2 w-1/3">เลขบัตร (ID)</th><th class="p-2">ชื่อ-สกุล (Name)</th></tr>
+                  <tr><th class="p-2 w-1/3">เลขบัตร (Column A)</th><th class="p-2">ชื่อ-สกุล (Column B)</th></tr>
                 </thead>
                 <tbody id="previewTableBody">
-                  <tr><td colspan="2" class="p-10 text-center text-gray-400 italic">ยังไม่มีข้อมูล.. กรุณาวางข้อมูลและกดตรวจสอบ</td></tr>
+                  <tr><td colspan="2" class="p-10 text-center text-gray-400 italic">กรุณาเลือกไฟล์ Excel ฝั่งซ้าย</td></tr>
                 </tbody>
               </table>
             </div>
 
             <button id="btnConfirmImport" onclick="confirmImport()" class="mt-4 w-full bg-green-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-green-700 shadow-lg opacity-50 cursor-not-allowed" disabled>
-              2. ยืนยันการอัปโหลดเข้าสู่ระบบ
+              ยืนยันการอัปโหลดเข้าสู่ระบบ
             </button>
-            <p class="text-xs text-red-500 mt-2 text-center">* การบันทึกจะล้างรายชื่อเก่าทั้งหมด และแทนที่ด้วยรายชื่อชุดนี้</p>
+            <p class="text-xs text-red-500 mt-2 text-center">* ระบบจะล้างรายชื่อเก่าทั้งหมด และแทนที่ด้วยไฟล์ใหม่นี้</p>
           </div>
 
         </div>
@@ -129,16 +139,16 @@
   <div id="formSection" class="hidden p-4 md:p-8 max-w-5xl mx-auto">
      <div class="bg-white p-10 text-center rounded shadow">
        <h2 class="text-2xl font-bold">ส่วนฟอร์มนักเรียน</h2>
-       <p>(ใช้ฟอร์มจากโค้ดชุดก่อนหน้าได้เลยครับ)</p>
+       <p class="text-gray-500">(ใช้โค้ดฟอร์มเดิมได้เลยครับ)</p>
        <button onclick="location.reload()" class="mt-4 text-blue-500 underline">Reload</button>
      </div>
   </div>
 
   <script>
-    // 🔴🔴🔴 URL ของคุณ 🔴🔴🔴
+    // 🔴🔴🔴 URL Script เดิมของคุณ (ไม่ต้องแก้ Backend) 🔴🔴🔴
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtWZwXSFcbdrrPZSLrs4kmEDYB4fqx3MxUs0Wo40lgkAyIi_6C-j0AJ3YZgWOBJ16AHw/exec'; 
 
-    let tempImportData = []; // เก็บข้อมูลชั่วคราวรอ Save
+    let tempImportData = []; // เก็บข้อมูลชั่วคราว
 
     function toggleAdminLogin() {
       document.getElementById('studentLoginBox').classList.toggle('hidden');
@@ -149,35 +159,61 @@
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById('view-applicants').classList.add('hidden');
       document.getElementById('view-import').classList.add('hidden');
-      
       document.getElementById('tab-' + tabName).classList.add('active');
       document.getElementById('view-' + tabName).classList.remove('hidden');
     }
 
-    // --- ส่วนนำเข้า Excel ---
-    function previewExcelData() {
-      const rawText = document.getElementById('excelPasteArea').value;
-      if(!rawText.trim()) { alert('กรุณาวางข้อมูลลงในกล่องข้อความก่อนครับ'); return; }
+    // 🟢 ฟังก์ชันอ่านไฟล์ Excel (ใหม่)
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-      // แยกบรรทัด
-      const lines = rawText.trim().split('\n');
+      // แสดงชื่อไฟล์
+      const nameDisp = document.getElementById('fileNameDisplay');
+      nameDisp.innerText = "ไฟล์ที่เลือก: " + file.name;
+      nameDisp.classList.remove('hidden');
+
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        
+        // อ่าน Sheet แรก
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // แปลงเป็น JSON (Array of Arrays) เพื่อความง่าย
+        // header: 1 หมายถึงให้ return เป็น [[A1, B1], [A2, B2], ...]
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+        
+        processExcelData(jsonData);
+      };
+      
+      reader.readAsArrayBuffer(file);
+    }
+
+    function processExcelData(rows) {
       tempImportData = [];
+      
+      // วนลูปทีละแถว
+      rows.forEach((row, index) => {
+        if (row.length === 0) return; // ข้ามแถวว่าง
 
-      lines.forEach(line => {
-        // แยก Tab (Excel) หรือ Space
-        let parts = line.split('\t');
-        if(parts.length < 2) parts = line.split(/ +/); // เผื่อไม่ได้ใช้ Tab
-        
-        // กรองข้อมูลว่าง
-        const id = parts[0] ? parts[0].trim() : '';
-        const name = parts.length > 1 ? parts[1].trim() : '';
-        
-        if(id && id.length >= 5) { // เช็คคร่าวๆ ว่าน่าจะเป็น ID
+        // สมมติ Column 0 = ID, Column 1 = Name
+        let id = row[0] ? String(row[0]).trim() : '';
+        let name = row[1] ? String(row[1]).trim() : '';
+
+        // กรอง: ID ต้องมีตัวเลข และยาวพอสมควร (เช่น มากกว่า 5 หลัก)
+        if (id && id.length >= 5 && !isNaN(id.replace(/-/g, ''))) {
            tempImportData.push({ id: id, name: name });
         }
       });
 
-      // แสดงผลในตาราง
+      renderPreviewTable();
+    }
+
+    function renderPreviewTable() {
       const tbody = document.getElementById('previewTableBody');
       const countLabel = document.getElementById('previewCount');
       const btnSave = document.getElementById('btnConfirmImport');
@@ -185,23 +221,30 @@
       countLabel.innerText = tempImportData.length + ' รายการ';
       tbody.innerHTML = '';
 
-      if(tempImportData.length === 0) {
-         tbody.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-red-500">ไม่พบข้อมูลที่ถูกต้อง กรุณาตรวจสอบการ Copy</td></tr>';
+      if (tempImportData.length === 0) {
+         tbody.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-red-500">ไม่พบข้อมูล หรือรูปแบบไฟล์ไม่ถูกต้อง</td></tr>';
          btnSave.disabled = true;
          btnSave.classList.add('opacity-50', 'cursor-not-allowed');
       } else {
-         tempImportData.forEach(item => {
+         // โชว์แค่ 100 แถวแรกพอกันเครื่องค้างถ้าไฟล์ใหญ่มาก
+         const displayLimit = tempImportData.slice(0, 100); 
+         displayLimit.forEach(item => {
             tbody.innerHTML += `<tr class="border-b bg-white"><td class="p-2 font-mono text-blue-800">${item.id}</td><td class="p-2">${item.name}</td></tr>`;
          });
-         // เปิดปุ่ม Save
+         
+         if (tempImportData.length > 100) {
+             tbody.innerHTML += `<tr><td colspan="2" class="p-2 text-center text-gray-500">... และอีก ${tempImportData.length - 100} รายการ ...</td></tr>`;
+         }
+
          btnSave.disabled = false;
          btnSave.classList.remove('opacity-50', 'cursor-not-allowed');
       }
     }
 
     function clearImport() {
-      document.getElementById('excelPasteArea').value = '';
-      document.getElementById('previewTableBody').innerHTML = '<tr><td colspan="2" class="p-10 text-center text-gray-400">ยังไม่มีข้อมูล..</td></tr>';
+      document.getElementById('excelFile').value = '';
+      document.getElementById('fileNameDisplay').classList.add('hidden');
+      document.getElementById('previewTableBody').innerHTML = '<tr><td colspan="2" class="p-10 text-center text-gray-400">กรุณาเลือกไฟล์ Excel ฝั่งซ้าย</td></tr>';
       document.getElementById('previewCount').innerText = '0 รายการ';
       document.getElementById('btnConfirmImport').disabled = true;
       document.getElementById('btnConfirmImport').classList.add('opacity-50');
@@ -209,10 +252,10 @@
     }
 
     function confirmImport() {
-      if(!confirm(`ยืนยันการนำเข้าข้อมูล ${tempImportData.length} รายชื่อ?\n(ระบบจะล้างรายชื่อเก่าทั้งหมด และแทนที่ด้วยชุดนี้)`)) return;
+      if(!confirm(`ยืนยันการนำเข้าข้อมูล ${tempImportData.length} รายชื่อ?\n(รายชื่อเก่าจะถูกลบทั้งหมด)`)) return;
 
       const btn = document.getElementById('btnConfirmImport');
-      btn.innerText = '⏳ กำลังอัปโหลดข้อมูลเข้าสู่ระบบ...';
+      btn.innerText = '⏳ กำลังอัปโหลด...';
       btn.disabled = true;
 
       fetch(SCRIPT_URL, {
@@ -223,18 +266,18 @@
       .then(json => {
          if(json.success) {
             alert('✅ บันทึกข้อมูลสำเร็จ! นักเรียนสามารถเข้าใช้งานได้ทันที');
-            clearImport(); // ล้างหน้าจอ
+            clearImport();
          } else {
             alert('❌ เกิดข้อผิดพลาด: ' + json.error);
          }
       })
       .catch(err => alert('เชื่อมต่อไม่ได้: ' + err))
       .finally(() => {
-         btn.innerText = '2. ยืนยันการอัปโหลดเข้าสู่ระบบ';
+         btn.innerText = 'ยืนยันการอัปโหลดเข้าสู่ระบบ';
       });
     }
 
-    // --- ส่วน Login & Render Applicants ---
+    // --- ส่วน Login & Render (เหมือนเดิม) ---
     function handleLogin(e, role) {
       e.preventDefault();
       let payload = { action: 'login' };
@@ -264,7 +307,7 @@
               renderApplicants(json.data);
            } else {
               document.getElementById('formSection').classList.remove('hidden');
-              // ... logic student form ...
+              // ... logic populate form ...
            }
         }
       })
