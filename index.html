@@ -5,183 +5,387 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ใบสมัคร - โรงเรียนบางสะพานวิทยา</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Sarabun', sans-serif; background: #e2e8f0; }
+    body { font-family: 'Sarabun', sans-serif; background: #f3f4f6; } /* พื้นหลังเทาอ่อน */
     .hidden { display: none !important; }
-    
-    /* Paper Effect */
-    .a4-paper { 
-       background: white; width: 210mm; min-height: 297mm; margin: 20px auto; 
-       padding: 15mm 20mm; position: relative; box-shadow: 0 0 15px rgba(0,0,0,0.1); 
-    }
-    @media (max-width: 768px) { .a4-paper { width: 100%; padding: 15px; } }
 
-    /* Custom Inputs mimicking dots/lines */
-    .dotted-line { 
-       border: none; border-bottom: 1px dotted #444; width: 100%; 
-       outline: none; color: #1e3a8a; font-weight: bold; padding: 0 5px; background: transparent;
+    /* --- Paper Style (A4) --- */
+    .a4-paper {
+      background: white; width: 210mm; min-height: 297mm; margin: 20px auto;
+      padding: 15mm 20mm; position: relative; 
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
     }
-    .check-box { 
-       appearance: none; width: 18px; height: 18px; border: 1px solid #444; 
-       margin-right: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
-    }
-    .check-box:checked { background: #1e3a8a; border-color: #1e3a8a; }
-    .check-box:checked::after { content: '✓'; color: white; font-size: 14px; }
-    
-    /* ID Card Boxes */
-    .id-box-group { display: flex; gap: 8px; align-items: center; }
-    .id-box { 
-       border: 1px solid #444; width: 20px; height: 26px; text-align: center; 
-       font-weight: bold; border-radius: 2px; font-size: 14px;
-    }
-    .id-segment { display: flex; gap: 1px; }
+    @media (max-width: 768px) { .a4-paper { width: 100%; padding: 15px; margin: 10px auto; min-height: auto; } }
 
-    /* Photo Upload Box */
-    .photo-upload-box {
-       width: 35mm; height: 45mm; border: 1px solid #000; 
-       display: flex; flex-direction: column; justify-content: center; align-items: center;
-       cursor: pointer; position: relative; overflow: hidden; background: #f8fafc;
+    /* --- Input Styles (Dotted Line) --- */
+    .dot-input {
+      border: none; border-bottom: 1px dotted #000; width: 100%;
+      outline: none; color: #1e3a8a; font-weight: bold; padding: 0 5px; 
+      background: transparent; border-radius: 0; line-height: 1.5;
     }
-    .photo-upload-box:hover { background: #f1f5f9; }
-    .photo-preview { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
+    .dot-input:focus { border-bottom: 1px solid #1e3a8a; }
+    
+    /* --- Checkbox Style --- */
+    .chk-box {
+      appearance: none; width: 16px; height: 16px; border: 1px solid #000;
+      margin-right: 6px; display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; position: relative; top: 3px;
+    }
+    .chk-box:checked { background: #000; }
+    .chk-box:checked::after { content: '✓'; color: white; font-size: 12px; font-weight: bold; }
+
+    /* --- ID Card Boxes --- */
+    .id-segment { display: flex; gap: 2px; }
+    .id-box {
+      width: 22px; height: 28px; border: 1px solid #000; text-align: center;
+      font-weight: bold; font-size: 16px; border-radius: 2px;
+    }
+
+    /* --- Photo Upload --- */
+    .photo-area {
+      width: 35mm; height: 45mm; border: 1px solid #000; background: #f9fafb;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; overflow: hidden; position: relative;
+    }
+    .photo-area:hover { background: #f3f4f6; }
+    .photo-preview { width: 100%; height: 100%; object-fit: cover; position: absolute; }
+
+    h2, h3 { color: #000; }
+    .page-num { position: absolute; top: 10mm; right: 10mm; font-size: 12px; color: #666; }
   </style>
 </head>
 <body>
 
-  <div id="loginSection" class="min-h-screen flex items-center justify-center bg-blue-900 p-4">
-    <div class="bg-white p-8 rounded-lg shadow-2xl max-w-md w-full text-center">
-       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Emblem_of_the_Ministry_of_Education_of_Thailand.svg/1200px-Emblem_of_the_Ministry_of_Education_of_Thailand.svg.png" class="h-20 mx-auto mb-4">
-       <h1 class="text-2xl font-bold text-gray-800 mb-2">ระบบรับสมัครนักเรียน</h1>
+  <div id="loginSection" class="min-h-screen flex items-center justify-center bg-blue-900 px-4">
+    <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full text-center">
+       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Emblem_of_the_Ministry_of_Education_of_Thailand.svg/1200px-Emblem_of_the_Ministry_of_Education_of_Thailand.svg.png" class="h-24 mx-auto mb-4">
+       <h1 class="text-2xl font-bold text-gray-800 mb-1">ระบบรับสมัครนักเรียน</h1>
        <p class="text-gray-500 mb-6">โรงเรียนบางสะพานวิทยา</p>
        
-       <div id="roleStudent">
-          <input type="text" id="loginUser" maxlength="13" class="w-full border-2 border-blue-100 rounded-lg p-3 text-center text-xl tracking-widest mb-4 focus:border-blue-500 outline-none" placeholder="เลขบัตรประชาชน 13 หลัก">
-          <button onclick="handleLogin('student')" id="btnStu" class="w-full bg-blue-800 text-white py-3 rounded-lg font-bold hover:bg-blue-900 transition">เข้าสู่ระบบ</button>
-          <div class="mt-4 text-xs text-gray-400 cursor-pointer underline" onclick="toggleRole()">สำหรับเจ้าหน้าที่</div>
-       </div>
-
-       <div id="roleAdmin" class="hidden">
-          <input type="text" id="admUser" placeholder="Username" class="w-full border p-2 rounded mb-2">
-          <input type="password" id="admPass" placeholder="Password" class="w-full border p-2 rounded mb-4">
-          <button onclick="handleLogin('admin')" id="btnAdm" class="w-full bg-red-700 text-white py-3 rounded hover:bg-red-800 font-bold">เข้าสู่ระบบ (Admin)</button>
-          <div class="mt-4 text-xs text-gray-400 cursor-pointer underline" onclick="toggleRole()">กลับไปหน้าหลัก</div>
-       </div>
+       <form onsubmit="handleLogin(event)">
+         <input type="text" id="loginUser" maxlength="13" class="w-full border-2 border-gray-200 rounded-lg p-3 text-center text-xl tracking-widest mb-4 focus:border-blue-500 outline-none" placeholder="เลขบัตรประชาชน 13 หลัก" required>
+         <button type="submit" id="btnLogin" class="w-full bg-blue-800 text-white py-3 rounded-lg font-bold hover:bg-blue-900 transition shadow-lg">เข้าสู่ระบบ</button>
+       </form>
+       
+       <div class="mt-4 text-xs text-gray-400">สำหรับเจ้าหน้าที่: ใช้ Username/Password ในการเข้าสู่ระบบ</div>
     </div>
   </div>
 
-  <div id="formSection" class="hidden pb-20">
+  <div id="formSection" class="hidden pb-24">
     <form id="appForm" onsubmit="submitForm(event)">
-      
+
       <div class="a4-paper">
+         <div class="page-num">หน้า 1</div>
          
-         <div class="flex justify-between items-start mb-6 relative">
-            <div class="flex-1 text-center pt-4">
-               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Emblem_of_the_Ministry_of_Education_of_Thailand.svg/1200px-Emblem_of_the_Ministry_of_Education_of_Thailand.svg.png" class="h-20 mx-auto mb-2">
-               <h2 class="text-xl font-bold">ใบสมัครเข้าเรียนต่อชั้นมัธยมศึกษาปีที่ 1</h2>
-               <h3 class="font-bold">โรงเรียนบางสะพานวิทยา อำเภอบางสะพาน จังหวัดประจวบคีรีขันธ์</h3>
-               <p class="text-sm">สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาประจวบคีรีขันธ์</p>
+         <div class="flex justify-between items-start mb-6">
+            <div class="flex-1 text-center pt-2 pl-[35mm]"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Emblem_of_the_Ministry_of_Education_of_Thailand.svg/1200px-Emblem_of_the_Ministry_of_Education_of_Thailand.svg.png" class="h-20 mx-auto mb-2">
+               <div class="font-bold text-lg">ใบสมัครเข้าเรียนต่อชั้นมัธยมศึกษาปีที่ 1</div>
+               <div class="font-bold">โรงเรียนบางสะพานวิทยา อำเภอบางสะพาน จังหวัดประจวบคีรีขันธ์</div>
+               <div class="text-sm">สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาประจวบคีรีขันธ์</div>
             </div>
-            
-            <div class="absolute right-0 top-0">
-               <div class="text-xs text-center mb-1">เลขที่ผู้สมัคร <div class="border border-black px-2 inline-block h-6 w-16"></div></div>
-               <div class="photo-upload-box" onclick="document.getElementById('fileInput').click()">
-                  <span class="text-xs text-gray-400 text-center z-0 px-2">รูปถ่าย<br>นักเรียน<br>1-1.5 นิ้ว<br>(คลิกเพื่ออัพโหลด)</span>
-                  <img id="imgPreview" class="photo-preview hidden">
-                  <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="previewImage(this)">
+            <div class="flex flex-col items-end">
+               <div class="flex items-center text-xs mb-1">
+                  เลขที่ผู้สมัคร <div class="border border-black w-24 h-6 ml-1"></div>
                </div>
+               <div class="photo-area" onclick="document.getElementById('fileIn').click()">
+                  <span class="text-xs text-center p-2 text-gray-400">รูปถ่าย<br>นักเรียน<br>1-1.5 นิ้ว<br>(คลิก)</span>
+                  <img id="preview" class="photo-preview hidden">
+               </div>
+               <input type="file" id="fileIn" class="hidden" accept="image/*" onchange="loadPhoto(this)">
             </div>
          </div>
 
-         <div class="mb-6 text-sm ml-4">
-            <b>คำชี้แจง</b>
-            <ol class="list-decimal list-inside ml-2 space-y-1">
-               <li>กรุณาเขียนตัวบรรจง</li>
-               <li>กรอกข้อมูลในใบสมัครให้ครบถ้วนและถูกต้องตรงกับความจริง</li>
-            </ol>
+         <div class="text-sm mb-4">
+            <b>คำชี้แจง</b> 1. กรุณาเขียนตัวบรรจง 2. กรอกข้อมูลให้ครบถ้วนและถูกต้อง
          </div>
 
          <div class="mb-4">
-            <h3 class="font-bold border-b border-black inline-block mb-2">ทะเบียนบ้านของนักเรียน</h3>
-            <div class="ml-4 space-y-2">
-               <label class="flex items-start cursor-pointer"><input type="radio" name="area_status" value="ในเขต" class="check-box mt-1"> อยู่ในเขตพื้นที่บริการ (ต.กำเนิดนพคุณ, ต.พงศ์ประศาสน์, ต.แม่รำพึง, ต.ทองมงคล, ต.ร่อนทอง)</label>
-               <label class="flex items-center cursor-pointer"><input type="radio" name="area_status" value="นอกเขต" class="check-box"> อยู่นอกเขตพื้นที่บริการ</label>
+            <div class="font-bold mb-1">ทะเบียนบ้านของนักเรียน</div>
+            <div class="ml-4 space-y-1">
+               <label><input type="radio" name="area_status" value="ในเขต" class="chk-box"> อยู่ในเขตพื้นที่บริการ (ต.กำเนิดนพคุณ, ต.พงศ์ประศาสน์, ต.แม่รำพึง, ต.ทองมงคล, ต.ร่อนทอง)</label><br>
+               <label><input type="radio" name="area_status" value="นอกเขต" class="chk-box"> อยู่นอกเขตพื้นที่บริการ</label>
             </div>
          </div>
 
-         <div class="mb-6 flex items-baseline">
-            <span class="font-bold mr-2">กำลังศึกษาอยู่โรงเรียน</span>
-            <input type="text" name="old_school" class="dotted-line">
+         <div class="flex items-baseline mb-4">
+            <span class="font-bold whitespace-nowrap mr-2">กำลังศึกษาอยู่โรงเรียน</span>
+            <input name="old_school" class="dot-input">
          </div>
 
-         <div class="mb-6">
-            <h3 class="font-bold mb-2">ยืนยันสิทธิ์เข้าศึกษาต่อชั้นมัธยมศึกษาปีที่ 1 (เลือกเพียง 1 รายการ)</h3>
-            <div class="grid grid-cols-2 gap-4 ml-4">
-               <label class="flex items-center cursor-pointer"><input type="radio" name="program_select" value="วิทย์-คณิต" class="check-box"> ห้องเรียนวิทย์ - คณิต</label>
-               <label class="flex items-center cursor-pointer"><input type="radio" name="program_select" value="EIS" class="check-box"> ห้องเรียน EIS</label>
-               <label class="flex items-center cursor-pointer"><input type="radio" name="program_select" value="S&M" class="check-box"> ห้องเรียน S&M</label>
-               <label class="flex items-center cursor-pointer"><input type="radio" name="program_select" value="GATE" class="check-box"> ห้องเรียน GATE</label>
+         <div class="mb-4">
+            <div class="font-bold mb-1">ยืนยันสิทธิ์เข้าศึกษาต่อ (เลือกเพียง 1 รายการ)</div>
+            <div class="grid grid-cols-2 ml-4 gap-y-1">
+               <label><input type="radio" name="program_select" value="วิทย์-คณิต" class="chk-box"> ห้องเรียนวิทย์ - คณิต</label>
+               <label><input type="radio" name="program_select" value="EIS" class="chk-box"> ห้องเรียน EIS</label>
+               <label><input type="radio" name="program_select" value="S&M" class="chk-box"> ห้องเรียน S&M</label>
+               <label><input type="radio" name="program_select" value="GATE" class="chk-box"> ห้องเรียน GATE</label>
             </div>
          </div>
 
-         <div class="mb-6">
-            <h3 class="font-bold mb-2">หลักฐานประกอบการสมัคร</h3>
-            <div class="space-y-1 ml-4 text-sm">
-               <div class="flex justify-between"><label><input type="checkbox" name="docs" value="ทะเบียนบ้านนักเรียน" class="check-box"> 1. สำเนาทะเบียนบ้านนักเรียน</label> <span>จำนวน 1 ฉบับ</span></div>
-               <div class="flex justify-between"><label><input type="checkbox" name="docs" value="สูติบัตร" class="check-box"> 2. สำเนาสูติบัตรนักเรียน</label> <span>จำนวน 1 ฉบับ</span></div>
-               <div class="flex justify-between"><label><input type="checkbox" name="docs" value="ทะเบียนบ้านบิดา" class="check-box"> 3. สำเนาทะเบียนบ้านบิดาของนักเรียน</label> <span>จำนวน 1 ฉบับ</span></div>
-               <div class="flex justify-between"><label><input type="checkbox" name="docs" value="ทะเบียนบ้านมารดา" class="check-box"> 4. สำเนาทะเบียนบ้านมารดาของนักเรียน</label> <span>จำนวน 1 ฉบับ</span></div>
-               <div class="flex justify-between"><label><input type="checkbox" name="docs" value="ปพ.1" class="check-box"> 5. ปพ.1 หรือ ปพ.7</label> <span>จำนวน 1 ฉบับ</span></div>
-               <div class="flex items-center w-full">
-                  <input type="checkbox" name="docs" value="อื่นๆ" class="check-box"> 6. อื่นๆ (ระบุ) <input type="text" name="doc_other" class="dotted-line w-1/2 mx-2">
-               </div>
+         <div class="mb-4">
+            <div class="font-bold mb-1">หลักฐานประกอบการสมัคร</div>
+            <div class="ml-4 text-sm space-y-1">
+               <div class="flex justify-between"><label><input type="checkbox" name="docs" value="ทะเบียนบ้านนักเรียน" class="chk-box"> 1. สำเนาทะเบียนบ้านนักเรียน</label> <span>จำนวน 1 ฉบับ</span></div>
+               <div class="flex justify-between"><label><input type="checkbox" name="docs" value="สูติบัตร" class="chk-box"> 2. สำเนาสูติบัตรนักเรียน</label> <span>จำนวน 1 ฉบับ</span></div>
+               <div class="flex justify-between"><label><input type="checkbox" name="docs" value="ทะเบียนบ้านบิดา" class="chk-box"> 3. สำเนาทะเบียนบ้านบิดา</label> <span>จำนวน 1 ฉบับ</span></div>
+               <div class="flex justify-between"><label><input type="checkbox" name="docs" value="ทะเบียนบ้านมารดา" class="chk-box"> 4. สำเนาทะเบียนบ้านมารดา</label> <span>จำนวน 1 ฉบับ</span></div>
+               <div class="flex justify-between"><label><input type="checkbox" name="docs" value="ทะเบียนบ้านผู้ปกครอง" class="chk-box"> 5. สำเนาทะเบียนบ้านของผู้ปกครอง</label> <span>จำนวน 1 ฉบับ</span></div>
+               <div class="flex justify-between"><label><input type="checkbox" name="docs" value="ปพ.1" class="chk-box"> 6. ใบรับรองผลการศึกษา (ปพ.7 / ปพ.1)</label> <span>จำนวน 1 ฉบับ</span></div>
+               <div class="flex items-baseline"><label class="whitespace-nowrap"><input type="checkbox" name="docs" value="อื่นๆ" class="chk-box"> 7. อื่นๆ (ระบุ)</label> <input name="doc_other" class="dot-input w-32 mx-2"> <span>จำนวน 1 ฉบับ</span></div>
             </div>
          </div>
 
          <div class="mb-2">
-            <h3 class="font-bold mb-2">(1) รายละเอียดส่วนตัว</h3>
-            <div class="flex flex-wrap gap-2 mb-2 items-baseline">
+            <div class="font-bold mb-2">(1) รายละเอียดส่วนตัว</div>
+            <div class="flex items-baseline gap-2 mb-2">
                <span>ชื่อ (คำนำหน้า)</span>
-               <select name="prefix" class="border-b border-dotted border-black bg-transparent outline-none font-bold"><option>ด.ช.</option><option>ด.ญ.</option><option>นาย</option><option>น.ส.</option></select>
-               <input type="text" name="name_th" class="dotted-line w-1/3">
+               <select name="prefix" class="border-b border-dotted border-black outline-none bg-transparent font-bold"><option>ด.ช.</option><option>ด.ญ.</option><option>นาย</option><option>น.ส.</option></select>
+               <input name="name_th" class="dot-input w-1/3">
                <span>นามสกุล</span>
-               <input type="text" name="surname_th" class="dotted-line w-1/3">
+               <input name="surname_th" class="dot-input w-1/3">
+            </div>
+            <div class="flex items-baseline gap-2 mb-2">
+               <span>Name (Eng)</span>
+               <input name="name_en" class="dot-input w-1/3">
+               <span>Surname (Eng)</span>
+               <input name="surname_en" class="dot-input w-1/3">
             </div>
             
-            <div class="flex items-center gap-4 mb-2">
-               <span class="font-bold w-40">เลขประจำตัวประชาชน</span>
-               <div class="id-box-group" id="idCardContainer">
+            <div class="flex items-center gap-2 mb-2">
+               <span class="font-bold">เลขประจำตัวประชาชน:</span>
+               <div class="flex gap-3" id="idCardContainer">
                   </div>
-               <input type="hidden" name="idCard" id="realIdCard"> </div>
+               <input type="hidden" name="idCard" id="realIdCard">
+            </div>
 
-            <div class="flex items-baseline mb-2">
-               <span class="w-28">วัน เดือน ปีเกิด</span>
-               <input type="date" name="dob" class="dotted-line w-40">
-               <span class="ml-4">โรงพยาบาลที่เกิด</span>
-               <input type="text" name="birth_hosp" class="dotted-line w-1/3">
+            <div class="flex items-baseline gap-2 mb-2">
+               <span>วัน เดือน ปีเกิด:</span> <input type="date" name="dob" class="dot-input w-40">
+               <span>สถานที่เกิด รพ.</span> <input name="birth_hosp" class="dot-input w-32">
+               <span>ต.</span> <input name="birth_tum" class="dot-input w-24">
             </div>
-            
-            <div class="flex items-baseline mb-2 gap-2">
-               <span>ตำบล</span><input name="birth_tumbon" class="dotted-line flex-1">
-               <span>อำเภอ</span><input name="birth_amphoe" class="dotted-line flex-1">
-               <span>จังหวัด</span><input name="birth_province" class="dotted-line flex-1">
+            <div class="flex items-baseline gap-2 mb-2">
+               <span>อ.</span> <input name="birth_amp" class="dot-input w-24">
+               <span>จ.</span> <input name="birth_prov" class="dot-input w-24">
+               <span>หมู่เลือด</span> <input name="blood" class="dot-input w-12">
+               <span>สัญชาติ</span> <input name="nation" class="dot-input w-16">
             </div>
-            
             <div class="flex items-baseline gap-2">
-               <span class="w-16">หมู่เลือด</span><input name="blood" class="dotted-line w-16">
-               <span class="w-16">สัญชาติ</span><input name="nation" class="dotted-line w-20">
-               <span class="w-16">เชื้อชาติ</span><input name="race" class="dotted-line w-20">
-               <span class="w-16">ศาสนา</span><input name="religion" class="dotted-line w-20">
+               <span>เชื้อชาติ</span> <input name="race" class="dot-input w-16">
+               <span>ศาสนา</span> <input name="religion" class="dot-input w-16">
+            </div>
+         </div>
+      </div>
+
+      <div class="a4-paper">
+         <div class="page-num">หน้า 2</div>
+         <div class="font-bold text-lg mb-4">(2) รายละเอียดเกี่ยวกับที่อยู่</div>
+         
+         <div class="font-bold underline mb-2">ที่อยู่ตามทะเบียนบ้าน</div>
+         <div class="grid grid-cols-1 gap-2 mb-4 text-sm">
+            <div class="flex items-baseline">รหัสประจำบ้าน: <input name="reg_code" class="dot-input w-1/2"></div>
+            <div class="flex items-baseline gap-2">
+               บ้านเลขที่ <input name="reg_no" class="dot-input w-16">
+               หมู่ที่ <input name="reg_moo" class="dot-input w-12">
+               ถนน <input name="reg_road" class="dot-input flex-1">
+            </div>
+            <div class="flex items-baseline gap-2">
+               ตำบล <input name="reg_tum" class="dot-input flex-1">
+               อำเภอ <input name="reg_amp" class="dot-input flex-1">
+               จังหวัด <input name="reg_prov" class="dot-input flex-1">
+            </div>
+            <div class="flex items-baseline gap-2">
+               รหัสไปรษณีย์ <input name="reg_zip" class="dot-input w-24">
+               โทรศัพท์ <input name="reg_tel" class="dot-input w-40">
             </div>
          </div>
 
-         <div class="absolute bottom-5 right-10 text-xs text-gray-400">หน้า 1</div>
+         <div class="font-bold underline mb-2">ที่อยู่ปัจจุบันของนักเรียน</div>
+         <div class="grid grid-cols-1 gap-2 mb-6 text-sm">
+            <div class="flex items-baseline">รหัสประจำบ้าน: <input name="cur_code" class="dot-input w-1/2"></div>
+            <div class="flex items-baseline gap-2">
+               บ้านเลขที่ <input name="cur_no" class="dot-input w-16">
+               หมู่ที่ <input name="cur_moo" class="dot-input w-12">
+               ถนน <input name="cur_road" class="dot-input flex-1">
+            </div>
+            <div class="flex items-baseline gap-2">
+               ตำบล <input name="cur_tum" class="dot-input flex-1">
+               อำเภอ <input name="cur_amp" class="dot-input flex-1">
+               จังหวัด <input name="cur_prov" class="dot-input flex-1">
+            </div>
+            <div class="flex items-baseline gap-2">
+               รหัสไปรษณีย์ <input name="cur_zip" class="dot-input w-24">
+               โทรศัพท์ <input name="cur_tel" class="dot-input w-40 bg-yellow-50">
+            </div>
+         </div>
+
+         <div class="font-bold text-lg mb-4">(3) รายละเอียดนักเรียน</div>
+         <div class="grid md:grid-cols-2 gap-6 mb-4">
+            <div>
+               <div class="font-bold mb-1">การพักนอน:</div>
+               <div class="ml-2">
+                  <label><input type="radio" name="living" value="บิดามารดา" class="chk-box"> อยู่กับบิดามารดา</label><br>
+                  <label><input type="radio" name="living" value="ญาติ" class="chk-box"> อยู่กับญาติ</label><br>
+                  <label class="flex items-baseline"><input type="radio" name="living" value="อื่นๆ" class="chk-box"> อื่นๆ <input name="living_other" class="dot-input w-32"></label>
+               </div>
+            </div>
+            <div>
+               <div class="font-bold mb-1">ความด้อยโอกาส:</div>
+               <div class="space-y-1 text-sm">
+                  <div class="flex items-baseline">รายได้รวม <input name="fam_income" type="number" class="dot-input w-24"> บาท/เดือน</div>
+                  <div class="flex items-baseline">สมาชิก <input name="fam_mem" type="number" class="dot-input w-12"> คน</div>
+                  <div class="flex items-baseline">เฉลี่ย <input name="fam_avg" type="number" class="dot-input w-24"> บาท/คน</div>
+                  <label><input type="radio" name="poor_status" value="ยากจน" class="chk-box"> ยากจน (<= 3,000)</label><br>
+                  <label><input type="radio" name="poor_status" value="ไม่ยากจน" class="chk-box"> ไม่ยากจน (> 3,000)</label>
+               </div>
+            </div>
+         </div>
+
+         <div class="mb-4">
+             <div class="font-bold">ความขาดแคลน</div>
+             <div class="flex gap-4 ml-2 flex-wrap">
+                <label><input type="checkbox" name="lack" value="แบบเรียน" class="chk-box"> ขาดแคลนแบบเรียน</label>
+                <label><input type="checkbox" name="lack" value="เครื่องแบบ" class="chk-box"> เครื่องแบบ</label>
+                <label><input type="checkbox" name="lack" value="อาหารกลางวัน" class="chk-box"> อาหารกลางวัน</label>
+                <label><input type="checkbox" name="lack" value="ไม่ขาดแคลน" class="chk-box"> ไม่ขาดแคลน</label>
+             </div>
+         </div>
+
+         <div class="mb-4 border-t border-black pt-2">
+             <div class="font-bold">การเดินทางมาโรงเรียน</div>
+             <div class="flex gap-4 mb-2">
+                <label><input type="radio" name="commute" value="เดินเท้า" class="chk-box"> เดินเท้า</label>
+                <label><input type="radio" name="commute" value="ไม่เสียค่า" class="chk-box"> พาหนะไม่เสียค่าโดยสาร</label>
+                <label><input type="radio" name="commute" value="เสียค่า" class="chk-box"> พาหนะเสียค่าโดยสาร</label>
+             </div>
+             <div class="flex items-baseline gap-2">
+                เวลา <input name="commute_time" class="dot-input w-12"> นาที
+                ระยะทาง(ลูกรัง) <input name="dist_dirt" class="dot-input w-12"> ม.
+                (ลาดยาง) <input name="dist_road" class="dot-input w-12"> ม.
+             </div>
+         </div>
+
+         <div class="font-bold text-lg mb-2">(4) สุขภาพนักเรียน</div>
+         <div class="flex gap-8">
+            <div class="flex items-baseline">น้ำหนัก <input name="weight" type="number" class="dot-input w-16"> กก.</div>
+            <div class="flex items-baseline">ส่วนสูง <input name="height" type="number" class="dot-input w-16"> ซม.</div>
+         </div>
       </div>
-      
-      <div class="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex justify-center z-50">
-         <button type="submit" id="btnSave" class="bg-blue-900 text-white text-lg font-bold py-2 px-10 rounded-full shadow-lg hover:bg-blue-800 transition transform hover:scale-105">
-             ยืนยันการสมัครเรียน (บันทึกข้อมูล)
+
+      <div class="a4-paper">
+         <div class="page-num">หน้า 3</div>
+         <div class="font-bold text-lg mb-4">(5) ข้อมูลเกี่ยวกับครอบครัว</div>
+         
+         <div class="mb-4">
+            <span class="font-bold">สถานภาพบิดามารดา:</span>
+            <select name="parent_status" class="border border-black ml-2 p-1">
+               <option value="">--เลือก--</option>
+               <option>จดทะเบียนสมรส</option><option>ไม่ได้จดทะเบียนสมรส</option>
+               <option>หย่าร้าง</option><option>แยกกันอยู่</option>
+               <option>บิดาถึงแก่กรรม</option><option>มารดาถึงแก่กรรม</option>
+            </select>
+         </div>
+
+         <div class="p-3 border border-black rounded mb-4 text-sm">
+            <div class="font-bold mb-2">พี่น้องร่วมบิดามารดา</div>
+            <div class="grid grid-cols-4 gap-2">
+               <div>พี่ชาย <input name="bro_o" type="number" class="dot-input w-8"> คน</div>
+               <div>พี่สาว <input name="sis_o" type="number" class="dot-input w-8"> คน</div>
+               <div>น้องชาย <input name="bro_y" type="number" class="dot-input w-8"> คน</div>
+               <div>น้องสาว <input name="sis_y" type="number" class="dot-input w-8"> คน</div>
+            </div>
+            <div class="mt-2 flex items-baseline gap-2">
+               พี่น้องที่ศึกษาอยู่ (ไม่รวมตัวนร.) <input name="sib_study" type="number" class="dot-input w-12"> คน
+               นร.เป็นบุตรคนที่ <input name="child_order" type="number" class="dot-input w-12">
+            </div>
+         </div>
+
+         <div class="space-y-4 text-sm">
+            <div>
+               <div class="font-bold underline text-blue-900">ข้อมูลบิดา (ตามสูติบัตร)</div>
+               <div class="flex items-baseline">เลขบัตรฯ <input name="f_id" class="dot-input w-48"></div>
+               <div class="flex items-baseline">ชื่อ-สกุล <input name="f_name" class="dot-input flex-1"></div>
+               <div class="flex items-baseline gap-2">
+                  เชื้อชาติ<input name="f_race" class="dot-input w-16"> สัญชาติ<input name="f_nat" class="dot-input w-16">
+                  ศาสนา<input name="f_rel" class="dot-input w-16"> เลือด<input name="f_blood" class="dot-input w-12">
+               </div>
+               <div class="flex items-baseline gap-2">
+                  อาชีพ<input name="f_job" class="dot-input w-32"> รายได้<input name="f_inc" class="dot-input w-24"> บาท
+                  โทรศัพท์<input name="f_tel" class="dot-input w-32">
+               </div>
+            </div>
+
+            <div>
+               <div class="font-bold underline text-pink-900">ข้อมูลมารดา (ตามสูติบัตร)</div>
+               <div class="flex items-baseline">เลขบัตรฯ <input name="m_id" class="dot-input w-48"></div>
+               <div class="flex items-baseline">ชื่อ-สกุล <input name="m_name" class="dot-input flex-1"></div>
+               <div class="flex items-baseline gap-2">
+                  เชื้อชาติ<input name="m_race" class="dot-input w-16"> สัญชาติ<input name="m_nat" class="dot-input w-16">
+                  ศาสนา<input name="m_rel" class="dot-input w-16"> เลือด<input name="m_blood" class="dot-input w-12">
+               </div>
+               <div class="flex items-baseline gap-2">
+                  อาชีพ<input name="m_job" class="dot-input w-32"> รายได้<input name="m_inc" class="dot-input w-24"> บาท
+                  โทรศัพท์<input name="m_tel" class="dot-input w-32">
+               </div>
+            </div>
+
+            <div>
+               <div class="font-bold underline">ข้อมูลผู้ปกครอง (กรณีไม่ได้อยู่กับพ่อแม่)</div>
+               <div class="flex items-baseline">เกี่ยวข้องเป็น <input name="g_rel" class="dot-input w-32"> ของนักเรียน</div>
+               <div class="flex items-baseline">ชื่อ-สกุล <input name="g_name" class="dot-input flex-1"></div>
+               <div class="flex items-baseline gap-2">
+                  อาชีพ<input name="g_job" class="dot-input w-32"> รายได้<input name="g_inc" class="dot-input w-24"> บาท
+                  โทรศัพท์<input name="g_tel" class="dot-input w-32">
+               </div>
+            </div>
+         </div>
+
+         <div class="mt-4 p-2 bg-gray-100 border border-black">
+            ผู้ทำหน้าที่ผู้ปกครองขณะเรียน: 
+            <label class="ml-2"><input type="radio" name="active_guard" value="บิดา" class="chk-box"> บิดา</label>
+            <label class="ml-2"><input type="radio" name="active_guard" value="มารดา" class="chk-box"> มารดา</label>
+            <label class="ml-2"><input type="radio" name="active_guard" value="อื่นๆ" class="chk-box"> อื่นๆ</label>
+         </div>
+
+         <div class="text-center mt-8">
+            ลงชื่อนักเรียนผู้สมัคร ..........................................................................<br>
+            ( .......................................................................... )<br>
+            วันที่ยื่นใบสมัคร <input type="date" name="sign_date" class="border p-1">
+         </div>
+      </div>
+
+      <div class="a4-paper">
+         <div class="page-num">หน้า 4</div>
+         <div class="font-bold text-lg mb-4 border-b border-black inline-block">(สำหรับเจ้าหน้าที่) ผลการตรวจสอบความถูกต้อง</div>
+
+         <div class="space-y-4 mb-8">
+            <label class="block"><input type="radio" name="admin_check_result" value="ผ่าน" class="chk-box"> นักเรียนกรอกข้อมูลถูกต้อง และมีหลักฐานครบถ้วน</label>
+            <div>
+               <label><input type="radio" name="admin_check_result" value="ไม่ผ่าน" class="chk-box"> นักเรียนกรอกข้อมูลถูกต้อง แต่ยังขาดหลักฐาน ดังนี้</label>
+               <textarea name="missing_note" class="w-full border border-black p-2 mt-2 h-20" placeholder="(ระบุ) ...................................................."></textarea>
+            </div>
+         </div>
+
+         <div class="grid grid-cols-2 gap-8 text-center mt-12">
+            <div>
+               <div>ลงชื่อเจ้าหน้าที่ตรวจหลักฐาน</div>
+               <div class="mt-8 border-b border-dotted border-black w-3/4 mx-auto"></div>
+               <div class="mt-2">ครูผู้ตรวจหลักฐาน</div>
+               <div class="mt-2 text-sm">วันที่ ........ / ........ / 2568</div>
+            </div>
+            <div>
+               <div class="text-left ml-8 mb-4"><label><input type="checkbox" class="chk-box"> ได้ดำเนินการรับสมัครไว้เรียบร้อยแล้ว</label></div>
+               <div>ลงชื่อเจ้าหน้าที่รับสมัคร</div>
+               <div class="mt-8 border-b border-dotted border-black w-3/4 mx-auto"></div>
+               <div class="mt-2">ครูผู้รับสมัคร ม.1</div>
+               <div class="mt-2 text-sm">วันที่ ........ / ........ / 2568</div>
+            </div>
+         </div>
+      </div>
+
+      <div class="fixed bottom-0 left-0 w-full bg-white border-t p-3 flex justify-center z-50 shadow-lg">
+         <button type="submit" id="btnSave" class="bg-blue-900 text-white text-lg font-bold py-2 px-12 rounded-full hover:bg-blue-800 shadow-md transform hover:scale-105 transition">
+            ยืนยันการบันทึกใบสมัคร
          </button>
       </div>
 
@@ -189,18 +393,18 @@
   </div>
 
   <script>
-    // 🔴🔴 URL SCRIPT ของคุณ 🔴🔴
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtWZwXSFcbdrrPZSLrs4kmEDYB4fqx3MxUs0Wo40lgkAyIi_6C-j0AJ3YZgWOBJ16AHw/exec'; 
+    // 🔴🔴 ใส่ URL Script ของคุณที่นี่ 🔴🔴
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtWZwXSFcbdrrPZSLrs4kmEDYB4fqx3MxUs0Wo40lgkAyIi_6C-j0AJ3YZgWOBJ16AHw/exec';
 
     let photoBase64 = null;
     let existingPhoto = null;
 
-    // --- Generate ID Card Boxes ---
-    function renderIdBoxes() {
-       const c = document.getElementById('idCardContainer');
-       const structure = [1, 4, 5, 2, 1]; // จำนวนช่องในแต่ละชุด
+    // --- สร้างช่องเลขบัตร 13 หลัก (1-4-5-2-1) ---
+    function initIdCard() {
+       const container = document.getElementById('idCardContainer');
+       const groups = [1, 4, 5, 2, 1];
        let idx = 0;
-       structure.forEach((count, groupIndex) => {
+       groups.forEach(count => {
           const div = document.createElement('div');
           div.className = 'id-segment';
           for(let i=0; i<count; i++) {
@@ -208,123 +412,128 @@
              inp.className = 'id-box';
              inp.maxLength = 1;
              inp.dataset.idx = idx;
-             inp.onkeyup = (e) => handleIdInput(e, inp);
+             inp.onkeyup = (e) => onIdInput(e, inp);
              div.appendChild(inp);
              idx++;
           }
-          c.appendChild(div);
+          container.appendChild(div);
        });
     }
-    renderIdBoxes();
+    initIdCard();
 
-    function handleIdInput(e, el) {
-       // Allow only numbers
+    function onIdInput(e, el) {
        el.value = el.value.replace(/[^0-9]/g, '');
        const next = document.querySelector(`input[data-idx="${parseInt(el.dataset.idx)+1}"]`);
        const prev = document.querySelector(`input[data-idx="${parseInt(el.dataset.idx)-1}"]`);
        
-       if(el.value.length === 1 && next) next.focus();
-       if(e.key === 'Backspace' && el.value === '' && prev) prev.focus();
+       if(el.value.length===1 && next) next.focus();
+       if(e.key==='Backspace' && el.value==='' && prev) prev.focus();
        
-       // Update hidden input
-       updateRealId();
-    }
-
-    function updateRealId() {
+       // รวมค่าใส่ hidden input
        let val = '';
-       document.querySelectorAll('.id-box').forEach(i => val += i.value);
+       document.querySelectorAll('.id-box').forEach(b => val += b.value);
        document.getElementById('realIdCard').value = val;
     }
 
-    function fillIdBoxes(idStr) {
-       const boxes = document.querySelectorAll('.id-box');
-       const chars = idStr.split('');
-       boxes.forEach((b, i) => { if(chars[i]) b.value = chars[i]; });
-       updateRealId();
+    function fillIdBoxes(str) {
+       if(!str) return;
+       const chars = str.split('');
+       document.querySelectorAll('.id-box').forEach((b, i) => { if(chars[i]) b.value = chars[i]; });
+       document.getElementById('realIdCard').value = str;
     }
 
-    // --- Image Preview ---
-    function previewImage(input) {
+    // --- Upload รูป ---
+    function loadPhoto(input) {
        if (input.files && input.files[0]) {
           const reader = new FileReader();
           reader.onload = function(e) {
-             document.getElementById('imgPreview').src = e.target.result;
-             document.getElementById('imgPreview').classList.remove('hidden');
-             photoBase64 = e.target.result; // เก็บค่าไว้ส่ง
+             document.getElementById('preview').src = e.target.result;
+             document.getElementById('preview').classList.remove('hidden');
+             photoBase64 = e.target.result;
           }
           reader.readAsDataURL(input.files[0]);
        }
     }
 
-    // --- Login & Submit ---
-    function toggleRole() {
-       document.getElementById('roleStudent').classList.toggle('hidden');
-       document.getElementById('roleAdmin').classList.toggle('hidden');
-    }
+    // --- Login Logic ---
+    function handleLogin(e) {
+       e.preventDefault();
+       const u = document.getElementById('loginUser').value;
+       const btn = document.getElementById('btnLogin');
+       const txt = btn.innerText; btn.innerText = 'กำลังตรวจสอบ...'; btn.disabled = true;
 
-    function handleLogin(role) {
-       const u = role==='student'?document.getElementById('loginUser').value : document.getElementById('admUser').value;
-       const p = role==='student'?'':document.getElementById('admPass').value;
-       const btn = role==='student'?document.getElementById('btnStu'):document.getElementById('btnAdm');
-       
-       btn.innerText = 'กำลังตรวจสอบ...';
-       fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({action:'login', username:u, password:p})})
+       fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({action:'login', username:u, password:''})})
        .then(r=>r.json()).then(res => {
-          if(res.success === false) return alert(res.error);
-          document.getElementById('loginSection').classList.add('hidden');
+          if(!res.success) return alert(res.error || 'Login Failed');
           
           if(res.role === 'admin') {
-             // (ส่วน Admin เดิมของคุณ)
-             alert('Welcome Admin'); 
+             alert('Admin Login Success'); // (ถ้าใช้ Admin ให้ redirect ไปหน้า Admin)
           } else {
+             document.getElementById('loginSection').classList.add('hidden');
              document.getElementById('formSection').classList.remove('hidden');
-             fillIdBoxes(u); // กรอกเลขบัตรลงกล่องอัตโนมัติ
-             if(res.data) {
+             
+             fillIdBoxes(u); // ใส่เลขบัตรที่ login มาลงช่อง
+             
+             // ถ้ามีข้อมูลเก่า
+             if(res.found && res.data) {
                 populate(res.data);
                 if(res.data.photoUrl) {
-                   document.getElementById('imgPreview').src = res.data.photoUrl;
-                   document.getElementById('imgPreview').classList.remove('hidden');
+                   document.getElementById('preview').src = res.data.photoUrl;
+                   document.getElementById('preview').classList.remove('hidden');
                    existingPhoto = res.data.photoUrl;
                 }
+             } else if (res.nameFromList) {
+                // ถ้าเป็นเด็กใหม่ แต่มีชื่อใน whitelist ให้ใส่ชื่อรอไว้เลย
+                // (ต้องไปเขียน logic แยกชื่อ-สกุลเอง ถ้าใน whitelist เก็บรวม)
              }
           }
-       }).catch(e=>alert(e)).finally(()=> btn.innerText = 'เข้าสู่ระบบ');
+       })
+       .catch(err => alert('Error: '+err))
+       .finally(() => { btn.innerText = txt; btn.disabled = false; });
     }
 
+    // --- Save Logic ---
     function submitForm(e) {
        e.preventDefault();
        const btn = document.getElementById('btnSave');
-       btn.innerText = '⏳ กำลังอัปโหลดรูปและบันทึก...'; btn.disabled = true;
+       const txt = btn.innerText; btn.innerText = 'กำลังบันทึก...'; btn.disabled = true;
 
        const fd = {};
-       // Collect standard inputs
-       document.querySelectorAll('input:not(.id-box), select').forEach(el => {
-          if(el.type==='radio' && el.checked) fd[el.name]=el.value;
-          else if(el.type==='checkbox' && el.checked) {
-             if(!fd[el.name]) fd[el.name]=[]; fd[el.name].push(el.value);
-          } else if(el.type!=='radio' && el.type!=='checkbox' && el.type!=='file') {
-             fd[el.name] = el.value;
+       // เก็บค่า input ทั่วไป
+       document.querySelectorAll('input:not(.id-box), select, textarea').forEach(el => {
+          if(el.type==='radio') { if(el.checked) fd[el.name] = el.value; }
+          else if(el.type==='checkbox') { 
+             if(el.checked) { if(!fd[el.name]) fd[el.name]=[]; fd[el.name].push(el.value); }
           }
+          else if(el.type!=='file') { fd[el.name] = el.value; }
        });
        if(fd.docs) fd.docs = fd.docs.join(', ');
+       if(fd.lack) fd.lack = fd.lack.join(', ');
 
-       // Add Photo Info
+       // รูป
        if(photoBase64) fd.photoBase64 = photoBase64;
        if(existingPhoto) fd.existingPhoto = existingPhoto;
 
        fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({action:'save', data:fd})})
        .then(r=>r.json()).then(res => {
-          if(res.success) alert('✅ บันทึกข้อมูลและรูปภาพเรียบร้อย!');
+          if(res.success) alert('✅ บันทึกข้อมูลเรียบร้อยแล้ว!');
           else alert('Error: '+res.error);
-       }).finally(()=> { btn.innerText='ยืนยันการสมัครเรียน'; btn.disabled=false; });
+       })
+       .finally(() => { btn.innerText = txt; btn.disabled = false; });
     }
 
     function populate(d) {
-       // (ฟังก์ชันเดิม ใช้ populate ข้อมูลเก่าลงฟอร์ม)
        Object.keys(d).forEach(k => {
-          const el = document.getElementsByName(k)[0];
-          if(el && el.type!=='file') el.value = d[k];
-          // เพิ่ม logic radio/checkbox ตามเดิม
+          const els = document.getElementsByName(k);
+          if(!els.length) return;
+          const el = els[0];
+          if(el.type==='radio') {
+             els.forEach(r => { if(r.value == d[k]) r.checked = true; });
+          } else if(el.type==='checkbox') {
+             // (Simple logic for array)
+          } else {
+             el.value = d[k];
+          }
        });
     }
   </script>
