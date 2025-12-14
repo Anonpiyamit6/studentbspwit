@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบรับสมัครนักเรียนออนไลน์ - โรงเรียนบางสะพานวิทยา</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* --- CSS STYLES --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sarabun', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8f5e9 100%);
+      line-height: 1.6;
+      color: #2c3e50;
+      min-height: 100vh;
+    }
+    .app-container { width: 100%; height: 100%; }
+    
+    .header {
+      background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+      color: white;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .logo { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .header h1 { font-size: 1.8rem; font-weight: 700; }
+    
+    .container { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem; }
+    
+    .view { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; }
+    .view.active { display: block; opacity: 1; }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-left: 4px solid #4caf50;
+    }
+    
+    .form-section h2 {
+      font-size: 1.4rem; color: #2e7d32; margin-bottom: 1rem;
+      border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem;
+    }
+    
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+    .form-control {
+      width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0;
+      border-radius: 8px; font-family: inherit; font-size: 1rem;
+    }
+    .form-control:focus { border-color: #4caf50; outline: none; }
+    
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
+    
+    .btn {
+      padding: 0.8rem 1.5rem; border: none; border-radius: 8px;
+      font-weight: 600; cursor: pointer; font-family: inherit; font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #2e7d32; color: white; width: 100%; }
+    .btn-primary:hover { background: #1b5e20; }
+    .btn-secondary { background: #757575; color: white; }
+    
+    .info-box { background: #e8f5e9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+    .toast {
+      position: fixed; bottom: 2rem; right: 2rem;
+      background: #333; color: white; padding: 1rem 2rem;
+      border-radius: 8px; display: none; z-index: 9999;
+    }
+    .toast.show { display: block; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Table Styles */
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th { background: #2e7d32; color: white; padding: 1rem; text-align: left; }
+    td { padding: 1rem; border-bottom: 1px solid #ddd; }
+    .status-badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; background: #e3f2fd; color: #1565c0; }
+    
+    .spinner {
+      border: 3px solid #f3f3f3; border-top: 3px solid white;
+      border-radius: 50%; width: 20px; height: 20px;
+      animation: spin 1s linear infinite; display: inline-block; vertical-align: middle;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">🏫</div>
+    <h1>ระบบรับสมัครนักเรียนออนไลน์</h1>
+    <p>ระดับชั้นมัธยมศึกษาปีที่ 1 และ 4</p>
+  </div>
+
+  <div class="app-container">
+    
+    <div id="studentLoginView" class="view active">
+      <div class="container">
+        <div class="card" style="max-width: 500px; margin: 2rem auto;">
+          <h2 style="text-align: center; margin-bottom: 1.5rem; color: #2e7d32;">เข้าสู่ระบบนักเรียน</h2>
+          <form id="studentLoginForm">
+            <div class="form-group">
+              <label>เลขประจำตัวประชาชน (13 หลัก)</label>
+              <input type="text" id="studentIdCard" class="form-control" maxlength="13" placeholder="เลขบัตรประชาชน" required>
+            </div>
+            <button type="submit" class="btn btn-primary">เข้าสู่ระบบ / สมัครเรียน</button>
+            <div style="text-align: center; margin-top: 1rem;">
+              <a href="#" onclick="showView('adminLoginView')" style="color: #757575; font-size: 0.9rem;">เข้าสู่ระบบผู้ดูแล</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="adminLoginView" class="view">
+      <div class="container">
+        <div class="card" style="max-width: 500px; margin: 2rem auto;">
+          <h2 style="text-align: center; margin-bottom: 1.5rem; color: #c62828;">ผู้ดูแลระบบ</h2>
+          <form id="adminLoginForm">
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text" id="adminUsername" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="adminPassword" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="background: #c62828;">เข้าสู่ระบบ Admin</button>
+            <div style="text-align: center; margin-top: 1rem;">
+              <a href="#" onclick="showView('studentLoginView')" style="color: #757575;">กลับหน้าหลัก</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="applicationFormView" class="view">
+      <div class="container">
+        <div class="info-box">
+          <h3>📌 คำแนะนำ</h3>
+          <p>กรุณากรอกข้อมูลให้ครบถ้วนตามความเป็นจริง ข้อมูลที่กรอกจะใช้ในการพิจารณา</p>
+        </div>
+        <form id="applicationForm">
+          <div class="card">
+            <div class="form-section">
+              <h2>1. ข้อมูลทั่วไป</h2>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>คำนำหน้า</label>
+                  <select id="prefix" class="form-control" required>
+                    <option value="">เลือก</option>
+                    <option value="ด.ช.">ด.ช.</option>
+                    <option value="ด.ญ.">ด.ญ.</option>
+                    <option value="นาย">นาย</option>
+                    <option value="นางสาว">นางสาว</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                    <label>เลขบัตรประชาชน</label>
+                    <input type="text" id="idCard" class="form-control" readonly style="background: #f0f0f0;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>ชื่อ (ไทย)</label><input type="text" id="firstName" class="form-control" required></div>
+                <div class="form-group"><label>นามสกุล (ไทย)</label><input type="text" id="lastName" class="form-control" required></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>ชื่อ (Eng)</label><input type="text" id="firstNameEn" class="form-control"></div>
+                <div class="form-group"><label>นามสกุล (Eng)</label><input type="text" id="lastNameEn" class="form-control"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>วันเกิด</label><input type="date" id="birthDate" class="form-control" required></div>
+                <div class="form-group"><label>โรงพยาบาลที่เกิด</label><input type="text" id="birthHospital" class="form-control"></div>
+              </div>
+              <div class="form-row">
+                 <div class="form-group">
+                    <label>หมู่เลือด</label>
+                    <select id="bloodType" class="form-control">
+                        <option value="-">-</option><option value="A">A</option><option value="B">B</option><option value="O">O</option><option value="AB">AB</option>
+                    </select>
+                 </div>
+                 <div class="form-group"><label>สัญชาติ</label><input type="text" id="nationality" class="form-control" value="ไทย"></div>
+                 <div class="form-group"><label>เชื้อชาติ</label><input type="text" id="ethnicity" class="form-control" value="ไทย"></div>
+                 <div class="form-group"><label>ศาสนา</label><input type="text" id="religion" class="form-control" value="พุทธ"></div>
+              </div>
+            </div>
+
+            <div class="form-section">
+                <h2>2. ข้อมูลที่อยู่ & การศึกษา</h2>
+                <div class="form-group">
+                    <label>พื้นที่บริการ</label><br>
+                    <input type="radio" name="serviceArea" value="ในเขต" checked> ในเขตพื้นที่บริการ &nbsp;
+                    <input type="radio" name="serviceArea" value="นอกเขต"> นอกเขตพื้นที่บริการ
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>ตำบล</label><input type="text" id="subdistrict" class="form-control"></div>
+                    <div class="form-group"><label>อำเภอ</label><input type="text" id="district" class="form-control"></div>
+                    <div class="form-group"><label>จังหวัด</label><input type="text" id="province" class="form-control"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>โรงเรียนเดิม</label><input type="text" id="previousSchool" class="form-control" required></div>
+                    <div class="form-group"><label>เกรดเฉลี่ย (GPA)</label><input type="number" step="0.01" id="gpa" class="form-control" required></div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>3. การสมัครเข้าเรียน</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ระดับชั้น</label>
+                        <select id="gradeLevel" class="form-control" required>
+                            <option value="ม.1">มัธยมศึกษาปีที่ 1</option>
+                            <option value="ม.4">มัธยมศึกษาปีที่ 4</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>แผนการเรียน/โครงการ</label>
+                        <div style="margin-top: 0.5rem;">
+                            <input type="radio" name="program" value="วิทย์-คณิต" checked> วิทย์-คณิต<br>
+                            <input type="radio" name="program" value="S&M"> S&M<br>
+                            <input type="radio" name="program" value="EIS"> EIS<br>
+                            <input type="radio" name="program" value="GATE"> GATE
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2>4. เอกสารแนบ</h2>
+                <div class="form-group">
+                    <input type="checkbox" name="documents" value="ทะเบียนบ้าน"> ทะเบียนบ้าน &nbsp;
+                    <input type="checkbox" name="documents" value="สูติบัตร"> สูติบัตร &nbsp;
+                    <input type="checkbox" name="documents" value="ปพ.1"> ปพ.1 <br>
+                    <input type="checkbox" id="otherDocCheck"> อื่นๆ
+                    <div id="otherDocContainer" style="display:none; margin-top:0.5rem;">
+                        <input type="text" id="otherDocument" class="form-control" placeholder="ระบุเอกสารอื่นๆ">
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button type="submit" id="submitBtn" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 3rem;">
+                    บันทึกข้อมูลการสมัคร
+                </button>
+                <br><br>
+                <button type="button" class="btn btn-secondary" onclick="logout()">ยกเลิก / ออกจากระบบ</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="adminDashboardView" class="view">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2 style="color: #2e7d32;">Admin Dashboard</h2>
+                <button onclick="logout()" class="btn btn-secondary">ออกจากระบบ</button>
+            </div>
+            
+            <div class="form-row" style="margin-bottom: 1rem;">
+                <div class="card" style="text-align: center; padding: 1.5rem;">
+                    <h1 id="totalApplicants">0</h1>
+                    <p>ผู้สมัครทั้งหมด</p>
+                </div>
+                <div class="card" style="text-align: center; padding: 1.5rem;">
+                    <h1 id="m1Applicants">0</h1>
+                    <p>ม.1</p>
+                </div>
+                <div class="card" style="text-align: center; padding: 1.5rem;">
+                    <h1 id="m4Applicants">0</h1>
+                    <p>ม.4</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>รายชื่อผู้สมัคร</h3>
+                <button class="btn btn-secondary" onclick="loadAllApplicants()" style="margin-bottom: 1rem; font-size: 0.9rem;">🔄 รีเฟรชข้อมูล</button>
+                <div style="overflow-x: auto;">
+                    <table id="applicantsTable">
+                        <thead>
+                            <tr>
+                                <th>เลขบัตรฯ</th>
+                                <th>ชื่อ-สกุล</th>
+                                <th>ระดับชั้น</th>
+                                <th>โครงการ</th>
+                                <th>จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applicantsTableBody">
+                            <tr><td colspan="5" style="text-align: center;">กำลังโหลดข้อมูล...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminDetailView" class="view">
+        <div class="container">
+            <button onclick="backToDashboard()" class="btn btn-secondary" style="margin-bottom: 1rem;">« กลับหน้าแดชบอร์ด</button>
+            <div class="card">
+                <h2 style="color: #2e7d32; border-bottom: 2px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1rem;">รายละเอียดผู้สมัคร</h2>
+                <div id="applicantDetailContent"></div>
+                
+                <div style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                    <label>อัปเดตสถานะ:</label>
+                    <select id="editStatus" class="form-control" style="width: auto; display: inline-block;">
+                        <option value="สมัครแล้ว">สมัครแล้ว</option>
+                        <option value="เอกสารครบถ้วน">เอกสารครบถ้วน</option>
+                        <option value="ผ่านการคัดเลือก">ผ่านการคัดเลือก</option>
+                    </select>
+                    <button onclick="saveStatus()" class="btn btn-primary" style="width: auto;">บันทึกสถานะ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </div> <div id="toast" class="toast"></div>
+
+  <script>
+    // ==========================================
+    // ⚠️⚠️ CONFIGURATION ⚠️⚠️
+    // ใส่ URL ของ Web App ที่ได้จากการ Deploy ที่นี่
+    // ==========================================
+    const SCRIPT_URL = 'YOUR_WEB_APP_URL_HERE'; 
+
+    let currentUser = null;
+    let currentIdCard = null;
+    let allApplicants = [];
+    let currentApplicant = null;
+
+    // --- Navigation Functions ---
+    function showView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function logout() {
+        currentUser = null;
+        currentIdCard = null;
+        document.getElementById('applicationForm').reset();
+        showView('studentLoginView');
+    }
+
+    // --- Student Login ---
+    document.getElementById('studentLoginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const idCard = document.getElementById('studentIdCard').value;
+        if(idCard.length !== 13) { alert('กรุณากรอกเลข 13 หลัก'); return; }
+        
+        currentIdCard = idCard;
+        currentUser = 'student';
+        document.getElementById('idCard').value = idCard;
+        showView('applicationFormView');
+        showToast('เข้าสู่ระบบสำเร็จ');
+    });
+
+    // --- Other Docs Checkbox ---
+    document.getElementById('otherDocCheck').addEventListener('change', function(e) {
+        document.getElementById('otherDocContainer').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    // --- Submit Application (To Google Sheets) ---
+    document.getElementById('applicationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
+        btn.disabled = true;
+
+        // Collect Data
+        const formData = {
+            action: 'submit',
+            idCard: document.getElementById('idCard').value,
+            prefix: document.getElementById('prefix').value,
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            firstNameEn: document.getElementById('firstNameEn').value,
+            lastNameEn: document.getElementById('lastNameEn').value,
+            birthDate: document.getElementById('birthDate').value,
+            birthHospital: document.getElementById('birthHospital').value,
+            bloodType: document.getElementById('bloodType').value,
+            nationality: document.getElementById('nationality').value,
+            ethnicity: document.getElementById('ethnicity').value,
+            religion: document.getElementById('religion').value,
+            serviceArea: document.querySelector('input[name="serviceArea"]:checked').value,
+            subdistrict: document.getElementById('subdistrict').value,
+            district: document.getElementById('district').value,
+            province: document.getElementById('province').value,
+            previousSchool: document.getElementById('previousSchool').value,
+            gradeLevel: document.getElementById('gradeLevel').value,
+            gpa: document.getElementById('gpa').value,
+            program: document.querySelector('input[name="program"]:checked').value,
+            documents: Array.from(document.querySelectorAll('input[name="documents"]:checked')).map(c=>c.value).join(', '),
+            otherDocument: document.getElementById('otherDocument').value
+        };
+
+        // Send to Apps Script
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(formData)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                alert('บันทึกข้อมูลสำเร็จ!');
+                logout();
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + data.error);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('ไม่สามารถเชื่อมต่อระบบได้');
+        })
+        .finally(() => {
+            btn.innerHTML = 'บันทึกข้อมูลการสมัคร';
+            btn.disabled = false;
+        });
+    });
+
+    // --- Admin System ---
+    document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const u = document.getElementById('adminUsername').value;
+        const p = document.getElementById('adminPassword').value;
+        
+        if(u === 'admin' && p === '1234') { // รหัสผ่านง่ายๆ สำหรับทดสอบ
+            currentUser = 'admin';
+            showView('adminDashboardView');
+            loadAllApplicants();
+        } else {
+            alert('รหัสผ่านไม่ถูกต้อง');
+        }
+    });
+
+    function loadAllApplicants() {
+        showToast('กำลังโหลดข้อมูล...');
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getAll' })
+        })
+        .then(res => res.json())
+        .then(result => {
+            if(result.success) {
+                allApplicants = result.data;
+                renderDashboard();
+            }
+        });
+    }
+
+    function renderDashboard() {
+        // Stats
+        document.getElementById('totalApplicants').innerText = allApplicants.length;
+        document.getElementById('m1Applicants').innerText = allApplicants.filter(a => a.gradeLevel === 'ม.1').length;
+        document.getElementById('m4Applicants').innerText = allApplicants.filter(a => a.gradeLevel === 'ม.4').length;
+
+        // Table
+        const tbody = document.getElementById('applicantsTableBody');
+        if(allApplicants.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">ไม่พบข้อมูล</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        allApplicants.forEach((app, index) => {
+            html += `
+                <tr>
+                    <td>${app.idCard}</td>
+                    <td>${app.prefix}${app.firstName} ${app.lastName}</td>
+                    <td><span class="status-badge">${app.gradeLevel}</span></td>
+                    <td>${app.program}</td>
+                    <td><button class="btn btn-secondary" style="padding:0.3rem 0.5rem; font-size:0.8rem;" onclick="viewDetail('${app.idCard}')">ดูข้อมูล</button></td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    function viewDetail(id) {
+        currentApplicant = allApplicants.find(a => a.idCard === id);
+        if(!currentApplicant) return;
+        
+        const content = document.getElementById('applicantDetailContent');
+        content.innerHTML = `
+            <p><strong>ชื่อ-สกุล:</strong> ${currentApplicant.prefix}${currentApplicant.firstName} ${currentApplicant.lastName}</p>
+            <p><strong>เลขบัตร:</strong> ${currentApplicant.idCard}</p>
+            <p><strong>โรงเรียนเดิม:</strong> ${currentApplicant.previousSchool} (GPA: ${currentApplicant.gpa})</p>
+            <p><strong>ระดับชั้น:</strong> ${currentApplicant.gradeLevel} <strong>แผน:</strong> ${currentApplicant.program}</p>
+            <p><strong>เอกสาร:</strong> ${currentApplicant.documents} ${currentApplicant.otherDocument ? '('+currentApplicant.otherDocument+')' : ''}</p>
+            <p><strong>สถานะปัจจุบัน:</strong> <span class="status-badge">${currentApplicant.status}</span></p>
+        `;
+        
+        // Set dropdown value
+        document.getElementById('editStatus').value = currentApplicant.status || 'สมัครแล้ว';
+        
+        showView('adminDetailView');
+    }
+
+    function backToDashboard() {
+        showView('adminDashboardView');
+    }
+
+    function saveStatus() {
+        if(!currentApplicant) return;
+        const newStatus = document.getElementById('editStatus').value;
+        
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'update',
+                idCard: currentApplicant.idCard,
+                status: newStatus
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                alert('อัปเดตสถานะเรียบร้อย');
+                currentApplicant.status = newStatus;
+                viewDetail(currentApplicant.idCard); // Refresh View
+                loadAllApplicants(); // Refresh Dashboard background
+            }
+        });
+    }
+  </script>
+</body>
+</html>
