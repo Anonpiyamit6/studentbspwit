@@ -3,14 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบรับสมัครนักเรียน - โรงเรียนบางสะพานวิทยา</title>
+  <title>ระบบรับสมัครนักเรียน (Whitelist + Admin)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Sarabun', sans-serif; }
-    /* ซ่อนหน้า Form ไว้ก่อน */
-    #formSection { display: none; }
-    /* สไตล์ Input */
+    .hidden { display: none !important; }
     .input-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #1e3a8a; }
     .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
     .section-head { background: #e0f2fe; padding: 10px; font-weight: bold; color: #0c4a6e; border-left: 4px solid #0284c7; margin-top: 20px; margin-bottom: 10px; }
@@ -19,312 +17,184 @@
 <body class="bg-gray-100">
 
   <div id="loginSection" class="min-h-screen flex flex-col md:flex-row">
-    <div class="md:w-1/2 bg-blue-900 flex flex-col justify-center items-center text-white p-10">
+    <div class="md:w-1/2 bg-blue-900 flex flex-col justify-center items-center text-white p-10 relative">
       <h1 class="text-4xl font-bold mb-4">ระบบรับสมัครนักเรียน</h1>
       <h2 class="text-2xl opacity-90">โรงเรียนบางสะพานวิทยา</h2>
       <div class="mt-8 text-center text-blue-200">
-        <p>ยินดีต้อนรับสู่ระบบรับสมัครออนไลน์</p>
-        <p>ประจำปีการศึกษา 2568</p>
+        <p>เฉพาะผู้มีรายชื่อที่ได้รับอนุญาตเท่านั้น</p>
       </div>
+      <button onclick="toggleAdminLogin()" class="absolute bottom-4 left-4 text-blue-400 text-xs hover:text-white">
+        สำหรับเจ้าหน้าที่
+      </button>
     </div>
     
     <div class="md:w-1/2 bg-white flex flex-col justify-center items-center p-8">
       <div class="w-full max-w-md">
-        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">เข้าสู่ระบบ / เริ่มสมัคร</h3>
         
-        <form onsubmit="handleLogin(event)" class="space-y-4">
-          <div>
-            <label class="block text-gray-700 mb-2">เลขบัตรประจำตัวประชาชน (13 หลัก)</label>
-            <input type="text" id="loginIdCard" maxlength="13" required 
-                   class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-xl text-center tracking-widest"
-                   placeholder="ไม่ต้องใส่ขีด (-)">
-          </div>
-          <button type="submit" id="btnLogin" class="w-full bg-blue-900 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-800 transition">
-            เข้าสู่ระบบ
-          </button>
-        </form>
-        <p class="mt-4 text-sm text-gray-500 text-center">
-          * ระบบจะตรวจสอบข้อมูล หากเคยสมัครแล้วจะดึงข้อมูลเดิมมาให้แก้ไข
-        </p>
+        <div id="studentLoginBox">
+          <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">เข้าสู่ระบบ (นักเรียน)</h3>
+          <form onsubmit="handleLogin(event, 'student')" class="space-y-4">
+            <div>
+              <label class="block text-gray-700 mb-2">เลขบัตรประจำตัวประชาชน</label>
+              <input type="text" id="loginIdCard" maxlength="13" required 
+                     class="w-full p-4 border border-gray-300 rounded-lg text-xl text-center tracking-widest"
+                     placeholder="กรอกเลข 13 หลัก">
+            </div>
+            <button type="submit" id="btnLoginStudent" class="w-full bg-blue-900 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-800 transition">
+              ตรวจสอบสิทธิ์และสมัคร
+            </button>
+          </form>
+        </div>
+
+        <div id="adminLoginBox" class="hidden">
+          <h3 class="text-2xl font-bold text-red-800 mb-6 text-center">เข้าสู่ระบบ (เจ้าหน้าที่)</h3>
+          <form onsubmit="handleLogin(event, 'admin')" class="space-y-4">
+            <div>
+              <label class="block text-gray-700 mb-2">Username</label>
+              <input type="text" id="adminUser" value="admin" readonly class="w-full p-3 bg-gray-100 rounded border">
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2">Password</label>
+              <input type="password" id="adminPass" required class="w-full p-3 border rounded">
+            </div>
+            <button type="submit" id="btnLoginAdmin" class="w-full bg-red-800 text-white py-3 rounded-lg font-bold hover:bg-red-700">
+              เข้าสู่ระบบ Admin
+            </button>
+            <button type="button" onclick="toggleAdminLogin()" class="w-full text-gray-500 mt-2 text-sm">กลับไปหน้าหลัก</button>
+          </form>
+        </div>
+
       </div>
     </div>
   </div>
 
-  <div id="formSection" class="p-4 md:p-8 max-w-5xl mx-auto">
+  <div id="formSection" class="hidden p-4 md:p-8 max-w-5xl mx-auto">
     <div class="bg-white p-6 md:p-10 rounded-xl shadow-xl">
       <div class="flex justify-between items-center mb-6 border-b pb-4">
-        <div>
-           <h2 class="text-2xl font-bold text-blue-900">แบบฟอร์มใบสมัคร</h2>
-           <p class="text-gray-600">แก้ไขข้อมูลล่าสุดเมื่อ: <span id="lastUpdateDate">-</span></p>
-        </div>
-        <button onclick="logout()" class="text-red-600 hover:text-red-800 underline">ออกจากระบบ</button>
+        <h2 class="text-2xl font-bold text-blue-900">แบบฟอร์มใบสมัคร</h2>
+        <button onclick="location.reload()" class="text-red-600 underline">ออกจากระบบ</button>
       </div>
-
+      
       <form id="appForm" onsubmit="submitForm(event)">
-        <div class="section-head">1. ข้อมูลการสมัคร</div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="input-group"><label>สถานะพื้นที่บริการ</label><select id="serviceArea"><option>อยู่ในเขตพื้นที่บริการ</option><option>อยู่นอกเขตพื้นที่บริการ</option></select></div>
-          <div class="input-group"><label>ประเภทห้องเรียน</label><select id="program"><option>ห้องเรียนวิทย์ - คณิต</option><option>ห้องเรียน EIS</option><option>ห้องเรียน S&M</option><option>ห้องเรียน GATE</option></select></div>
-          <div class="input-group md:col-span-2"><label>โรงเรียนเดิม</label><input type="text" id="oldSchool"></div>
-        </div>
-
-        <div class="mt-4 p-4 bg-gray-50 rounded border">
-          <label class="font-bold mb-2 block">หลักฐานประกอบการสมัคร</label>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-             <label class="flex items-center gap-2"><input type="checkbox" name="docs" value="สำเนาทะเบียนบ้านนักเรียน"> สำเนาทะเบียนบ้านนักเรียน</label>
-             <label class="flex items-center gap-2"><input type="checkbox" name="docs" value="สำเนาสูติบัตรนักเรียน"> สำเนาสูติบัตรนักเรียน</label>
-             <label class="flex items-center gap-2"><input type="checkbox" name="docs" value="สำเนาทะเบียนบ้านบิดา"> สำเนาทะเบียนบ้านบิดา</label>
-             <label class="flex items-center gap-2"><input type="checkbox" name="docs" value="สำเนาทะเบียนบ้านมารดา"> สำเนาทะเบียนบ้านมารดา</label>
-             <label class="flex items-center gap-2"><input type="checkbox" name="docs" value="สำเนาทะเบียนบ้านผู้ปกครอง"> สำเนาทะเบียนบ้านผู้ปกครอง</label>
-             <label class="flex items-center gap-2"><input type="checkbox" name="docs" value="ปพ.1 หรือ ปพ.7"> ปพ.1 หรือ ปพ.7</label>
-             <div class="md:col-span-2 flex items-center gap-2">
-               <input type="checkbox" name="docs" value="อื่นๆ"> อื่นๆ: <input type="text" id="docOther" class="border-b border-gray-300 w-full p-1 ml-2">
-             </div>
-          </div>
-        </div>
-
-        <div class="section-head">2. ประวัติส่วนตัว</div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="input-group"><label>คำนำหน้า</label><select id="prefix"><option>ด.ช.</option><option>ด.ญ.</option><option>นาย</option><option>น.ส.</option></select></div>
-          <div class="input-group md:col-span-3"><label>ชื่อ-นามสกุล (ไทย)</label><div class="flex gap-2"><input id="name" placeholder="ชื่อ"><input id="surname" placeholder="สกุล"></div></div>
-          <div class="input-group md:col-span-4"><label>ชื่อ-นามสกุล (อังกฤษ)</label><div class="flex gap-2"><input id="nameEn" placeholder="Firstname"><input id="surnameEn" placeholder="Lastname"></div></div>
-          
-          <div class="input-group col-span-2"><label class="text-red-600">เลขบัตรประชาชน</label><input id="idCard" readonly class="bg-gray-200 cursor-not-allowed text-gray-500"></div>
-          <div class="input-group"><label>วันเกิด</label><input type="date" id="birthDate"></div>
-          <div class="input-group"><label>หมู่เลือด</label><input id="blood"></div>
-          
-          <div class="col-span-4 grid grid-cols-4 gap-2">
-             <div class="input-group"><label>รพ.ที่เกิด</label><input id="birthHosp"></div>
-             <div class="input-group"><label>ตำบล</label><input id="birthTam"></div>
-             <div class="input-group"><label>อำเภอ</label><input id="birthAmp"></div>
-             <div class="input-group"><label>จังหวัด</label><input id="birthProv"></div>
-          </div>
-          <div class="input-group"><label>สัญชาติ</label><input id="nation" value="ไทย"></div>
-          <div class="input-group"><label>เชื้อชาติ</label><input id="race" value="ไทย"></div>
-          <div class="input-group"><label>ศาสนา</label><input id="reli" value="พุทธ"></div>
-        </div>
-
-        <div class="section-head">3. ที่อยู่</div>
-        <div class="bg-blue-50 p-4 rounded mb-4">
-           <h4 class="font-bold underline mb-2">ที่อยู่ตามทะเบียนบ้าน</h4>
-           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div class="input-group"><label>รหัสบ้าน</label><input id="houseIdReg"></div>
-              <div class="input-group"><label>เลขที่</label><input id="noReg"></div>
-              <div class="input-group"><label>หมู่ที่</label><input id="mooReg"></div>
-              <div class="input-group"><label>ถนน</label><input id="roadReg"></div>
-              <div class="input-group"><label>ตำบล</label><input id="tamReg"></div>
-              <div class="input-group"><label>อำเภอ</label><input id="ampReg"></div>
-              <div class="input-group"><label>จังหวัด</label><input id="provReg"></div>
-              <div class="input-group"><label>รหัส ปณ.</label><input id="zipReg"></div>
-              <div class="input-group col-span-2"><label>โทรศัพท์</label><input id="phoneReg"></div>
-           </div>
-        </div>
-        <div class="bg-gray-50 p-4 rounded">
-           <h4 class="font-bold underline mb-2">ที่อยู่ปัจจุบัน</h4>
-           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div class="input-group"><label>รหัสบ้าน</label><input id="houseIdCur"></div>
-              <div class="input-group"><label>เลขที่</label><input id="noCur"></div>
-              <div class="input-group"><label>หมู่ที่</label><input id="mooCur"></div>
-              <div class="input-group"><label>ถนน</label><input id="roadCur"></div>
-              <div class="input-group"><label>ตำบล</label><input id="tamCur"></div>
-              <div class="input-group"><label>อำเภอ</label><input id="ampCur"></div>
-              <div class="input-group"><label>จังหวัด</label><input id="provCur"></div>
-              <div class="input-group"><label>รหัส ปณ.</label><input id="zipCur"></div>
-              <div class="input-group col-span-2"><label>โทรศัพท์</label><input id="phoneCur"></div>
-           </div>
-        </div>
-
-        <div class="section-head">4. ข้อมูลเชิงลึก</div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <div class="input-group">
-              <label>การพักนอน</label>
-              <select id="livingType"><option>อาศัยอยู่กับบิดามารดา</option><option>อาศัยอยู่กับญาติ</option><option>อื่นๆ</option></select>
-              <input id="livingOther" placeholder="ระบุ (ถ้าเลือกอื่นๆ)" class="mt-2">
-           </div>
-           <div>
-               <label class="block font-bold mb-2">ความขาดแคลน</label>
-               <div class="flex gap-4 flex-wrap">
-                  <label><input type="checkbox" name="lacks" value="แบบเรียน"> ขาดแบบเรียน</label>
-                  <label><input type="checkbox" name="lacks" value="เครื่องแบบ"> ขาดเครื่องแบบ</label>
-                  <label><input type="checkbox" name="lacks" value="อาหารกลางวัน"> ขาดอาหารกลางวัน</label>
-               </div>
-           </div>
-        </div>
-        
-        <div class="mt-4 p-3 border rounded">
-           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div class="input-group"><label>รายได้รวม</label><input id="incomeTotal" type="number"></div>
-              <div class="input-group"><label>จำนวนสมาชิก</label><input id="members" type="number"></div>
-              <div class="input-group"><label>เฉลี่ย/คน</label><input id="incomeAvg" type="number"></div>
-              <div class="input-group"><label>สถานะความยากจน</label><select id="povertyStatus"><option>ไม่อยู่ในเกณฑ์</option><option>อยู่ในเกณฑ์ยากจน</option></select></div>
-           </div>
-        </div>
-
-        <div class="mt-4 p-3 border rounded">
-           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div class="input-group"><label>วิธีเดินทาง</label><select id="commuteMethod"><option>เดินเท้า</option><option>พาหนะไม่เสียค่าโดยสาร</option><option>พาหนะเสียค่าโดยสาร</option></select></div>
-              <div class="input-group"><label>เวลา (นาที)</label><input id="commuteTime" type="number"></div>
-              <div class="input-group"><label>ทางลูกรัง (ม.)</label><input id="distDirt" type="number" value="0"></div>
-              <div class="input-group"><label>ทางลาดยาง (ม.)</label><input id="distConcrete" type="number" value="0"></div>
-           </div>
-        </div>
-        
-        <div class="section-head">5. สุขภาพ</div>
-        <div class="grid grid-cols-2 gap-4">
-           <div class="input-group"><label>น้ำหนัก (กก.)</label><input id="weight" type="number"></div>
-           <div class="input-group"><label>ส่วนสูง (ซม.)</label><input id="height" type="number"></div>
-        </div>
-
-        <div class="section-head">6. ครอบครัว</div>
-        <div class="input-group mb-2">
-           <label>สถานภาพบิดา-มารดา</label>
-           <select id="parentsStatus"><option>จดทะเบียนสมรส</option><option>ไม่จดทะเบียน</option><option>หย่าร้าง</option><option>แยกกันอยู่</option><option>บิดาถึงแก่กรรม</option><option>มารดาถึงแก่กรรม</option></select>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-           <div class="input-group"><label>พี่ชาย</label><input id="bro" type="number" value="0"></div>
-           <div class="input-group"><label>พี่สาว</label><input id="sis" type="number" value="0"></div>
-           <div class="input-group"><label>กำลังเรียนอยู่</label><input id="studySib" type="number" value="0"></div>
-           <div class="input-group"><label>นร.เป็นบุตรคนที่</label><input id="childOrder" type="number"></div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-           <div class="bg-blue-50 p-3 rounded">
-              <h4 class="font-bold underline text-blue-900 mb-2">ข้อมูลบิดา</h4>
-              <div class="input-group"><label>เลขบัตร</label><input id="dadId"></div>
-              <div class="input-group"><label>ชื่อ-สกุล</label><input id="dadName"></div>
-              <div class="flex gap-2">
-                 <div class="input-group w-1/2"><label>อาชีพ</label><input id="dadJob"></div>
-                 <div class="input-group w-1/2"><label>รายได้</label><input id="dadIncome"></div>
-              </div>
-              <div class="input-group"><label>เบอร์โทร</label><input id="dadPhone"></div>
-           </div>
-           <div class="bg-pink-50 p-3 rounded">
-              <h4 class="font-bold underline text-pink-900 mb-2">ข้อมูลมารดา</h4>
-              <div class="input-group"><label>เลขบัตร</label><input id="momId"></div>
-              <div class="input-group"><label>ชื่อ-สกุล</label><input id="momName"></div>
-              <div class="flex gap-2">
-                 <div class="input-group w-1/2"><label>อาชีพ</label><input id="momJob"></div>
-                 <div class="input-group w-1/2"><label>รายได้</label><input id="momIncome"></div>
-              </div>
-              <div class="input-group"><label>เบอร์โทร</label><input id="momPhone"></div>
-           </div>
-        </div>
-
-        <div class="mt-4 p-3 border rounded border-gray-400">
-           <h4 class="font-bold underline">ผู้ปกครอง (กรณีไม่ได้อยู่กับพ่อแม่)</h4>
-           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div class="input-group"><label>ความสัมพันธ์</label><input id="guardRel"></div>
-              <div class="input-group col-span-2"><label>ชื่อ-สกุล</label><input id="guardName"></div>
-              <div class="input-group"><label>อาชีพ</label><input id="guardJob"></div>
-              <div class="input-group"><label>เบอร์โทร</label><input id="guardPhone"></div>
-           </div>
-           <div class="input-group mt-2"><label>ขณะเรียนที่นี่ ผู้ปกครองคือ</label><select id="currentGuard"><option>บิดา</option><option>มารดา</option><option>อื่นๆ</option></select></div>
-        </div>
-
-        <button type="submit" id="btnSubmit" class="w-full bg-blue-900 text-white font-bold py-4 rounded-lg mt-8 hover:bg-blue-800 text-xl shadow-lg transition">
-           ยืนยันการบันทึกข้อมูล
-        </button>
+         <div class="text-center p-10 bg-gray-50 border border-dashed border-gray-400">
+            (พื้นที่วางโค้ดฟอร์ม Standard Form จากรอบที่แล้ว) <br>
+            <input type="hidden" id="idCard"> </div>
+         <button type="submit" id="btnSubmit" class="w-full bg-blue-900 text-white font-bold py-4 rounded-lg mt-4">บันทึกข้อมูล</button>
       </form>
+
+    </div>
+  </div>
+
+  <div id="adminSection" class="hidden p-6 max-w-6xl mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-xl">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">จัดการข้อมูลผู้สมัคร</h2>
+        <button onclick="location.reload()" class="bg-gray-500 text-white px-4 py-2 rounded">ออกจากระบบ</button>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-200 text-gray-700">
+              <th class="p-3 border">เวลาสมัคร</th>
+              <th class="p-3 border">เลขบัตร</th>
+              <th class="p-3 border">ชื่อ-สกุล</th>
+              <th class="p-3 border">ใบสมัคร (PDF)</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody">
+            </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <script>
-    // 🔴🔴🔴 ใส่ URL ใหม่ตรงนี้ 🔴🔴🔴
+    // 🔴🔴🔴 ใส่ URL ตรงนี้ 🔴🔴🔴
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtWZwXSFcbdrrPZSLrs4kmEDYB4fqx3MxUs0Wo40lgkAyIi_6C-j0AJ3YZgWOBJ16AHw/exec'; 
 
-    function handleLogin(e) {
-      e.preventDefault();
-      const idCard = document.getElementById('loginIdCard').value;
-      if(idCard.length !== 13) { alert('กรุณากรอกเลขบัตร 13 หลัก'); return; }
+    function toggleAdminLogin() {
+      document.getElementById('studentLoginBox').classList.toggle('hidden');
+      document.getElementById('adminLoginBox').classList.toggle('hidden');
+    }
 
-      const btn = document.getElementById('btnLogin');
+    function handleLogin(e, role) {
+      e.preventDefault();
+      
+      let payload = { action: 'login' };
+      let btn;
+
+      if (role === 'student') {
+        const id = document.getElementById('loginIdCard').value;
+        if(id.length !== 13) { alert('เลขบัตรไม่ครบ 13 หลัก'); return; }
+        payload.idCard = id;
+        btn = document.getElementById('btnLoginStudent');
+      } else {
+        payload.idCard = 'admin';
+        payload.password = document.getElementById('adminPass').value;
+        btn = document.getElementById('btnLoginAdmin');
+      }
+
       btn.innerText = 'กำลังตรวจสอบ...'; btn.disabled = true;
 
-      // ส่ง request 'login' ไปเช็คข้อมูล
       fetch(SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'login', idCard: idCard })
+        body: JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(json => {
-        // ซ่อนหน้า Login -> โชว์หน้า Form
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('formSection').style.display = 'block';
-        
-        // ล็อกช่องเลขบัตร ไม่ให้แก้
-        document.getElementById('idCard').value = idCard;
-
-        if (json.found) {
-           alert('พบข้อมูลเดิม ระบบได้ดึงข้อมูลมาให้แล้ว ท่านสามารถแก้ไขและบันทึกใหม่ได้');
-           populateForm(json.data);
-           document.getElementById('lastUpdateDate').innerText = 'ข้อมูลเดิม';
+        if (json.error) {
+           alert('❌ ' + json.error);
         } else {
-           alert('ไม่พบข้อมูลเดิม เริ่มต้นกรอกใบสมัครใหม่');
-           document.getElementById('lastUpdateDate').innerText = 'ผู้สมัครรายใหม่';
+           // Login สำเร็จ
+           document.getElementById('loginSection').classList.add('hidden');
+           
+           if (json.role === 'admin') {
+             // โชว์หน้า Admin
+             document.getElementById('adminSection').classList.remove('hidden');
+             renderAdminTable(json.data);
+           } else {
+             // โชว์หน้า Student Form
+             document.getElementById('formSection').classList.remove('hidden');
+             document.getElementById('idCard').value = payload.idCard; // ล็อคเลขบัตร
+             
+             if (json.found) {
+               alert('✅ พบข้อมูลเดิม ระบบดึงข้อมูลมาให้แล้ว');
+               populateForm(json.data); // ฟังก์ชันเดิมที่ใช้ดึงข้อมูลลงฟอร์ม
+             } else {
+               alert('✅ เข้าสู่ระบบสำเร็จ กรุณากรอกข้อมูลให้ครบถ้วน');
+             }
+           }
         }
       })
-      .catch(err => alert('เกิดข้อผิดพลาดในการเชื่อมต่อ'))
+      .catch(err => alert('เชื่อมต่อไม่ได้: ' + err))
       .finally(() => { btn.innerText = 'เข้าสู่ระบบ'; btn.disabled = false; });
     }
 
-    function populateForm(data) {
-       // Loop ใส่ข้อมูลลง input ทั่วไป
-       for (const key in data) {
-          const el = document.getElementById(key);
-          if (el && el.type !== 'checkbox') {
-             el.value = data[key];
-          }
-       }
-       // จัดการ Checkbox
-       if (data.docs) {
-          data.docs.forEach(val => {
-             const cb = document.querySelector(`input[name="docs"][value="${val}"]`);
-             if(cb) cb.checked = true;
-          });
-       }
-       if (data.lacks) {
-          data.lacks.forEach(val => {
-             const cb = document.querySelector(`input[name="lacks"][value="${val}"]`);
-             if(cb) cb.checked = true;
-          });
-       }
+    function renderAdminTable(data) {
+      const tbody = document.getElementById('adminTableBody');
+      tbody.innerHTML = '';
+      if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">ยังไม่มีผู้สมัคร</td></tr>'; return; }
+
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = "border-b hover:bg-gray-50";
+        tr.innerHTML = `
+          <td class="p-3">${new Date(row.timestamp).toLocaleString('th-TH')}</td>
+          <td class="p-3">${row.idCard}</td>
+          <td class="p-3">${row.name}</td>
+          <td class="p-3">
+             <a href="${row.pdfUrl}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1">
+               📄 เปิดดู PDF
+             </a>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
-    function submitForm(e) {
-      e.preventDefault();
-      const btn = document.getElementById('btnSubmit');
-      btn.innerText = 'กำลังบันทึกและสร้าง PDF...'; btn.disabled = true;
-
-      // รวมข้อมูล
-      let data = {};
-      document.querySelectorAll('input:not([type="checkbox"]), select').forEach(el => data[el.id] = el.value);
-      
-      // รวม Checkbox
-      let getChecks = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(cb => cb.value);
-      data.docs = getChecks('docs');
-      data.lacks = getChecks('lacks');
-
-      // ส่ง action: 'save'
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'save', data: data })
-      })
-      .then(res => res.json())
-      .then(json => {
-         if(json.success) {
-            if(confirm('บันทึกสำเร็จ! กดตกลงเพื่อดู PDF')) {
-               window.location.href = json.url;
-            }
-         } else {
-            alert('Error: ' + json.error);
-         }
-      })
-      .finally(() => { btn.innerText = 'ยืนยันการบันทึกข้อมูล'; btn.disabled = false; });
-    }
-
-    function logout() {
-       location.reload();
-    }
+    // ฟังก์ชัน submitForm และ populateForm (ใช้โค้ดเดิมจากรอบที่แล้วได้เลยครับ)
+    // ...
   </script>
 </body>
 </html>
