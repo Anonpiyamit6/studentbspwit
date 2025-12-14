@@ -3,15 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบรับสมัครนักเรียน (Whitelist + Admin)</title>
+  <title>ระบบรับสมัครนักเรียน (Admin V2)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Sarabun', sans-serif; }
     .hidden { display: none !important; }
+    /* สไตล์ฟอร์ม */
     .input-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #1e3a8a; }
     .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
     .section-head { background: #e0f2fe; padding: 10px; font-weight: bold; color: #0c4a6e; border-left: 4px solid #0284c7; margin-top: 20px; margin-bottom: 10px; }
+    /* สไตล์แท็บแอดมิน */
+    .tab-btn { padding: 10px 20px; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; }
+    .tab-btn.active { border-bottom-color: #1e3a8a; color: #1e3a8a; }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -20,181 +24,231 @@
     <div class="md:w-1/2 bg-blue-900 flex flex-col justify-center items-center text-white p-10 relative">
       <h1 class="text-4xl font-bold mb-4">ระบบรับสมัครนักเรียน</h1>
       <h2 class="text-2xl opacity-90">โรงเรียนบางสะพานวิทยา</h2>
-      <div class="mt-8 text-center text-blue-200">
-        <p>เฉพาะผู้มีรายชื่อที่ได้รับอนุญาตเท่านั้น</p>
-      </div>
-      <button onclick="toggleAdminLogin()" class="absolute bottom-4 left-4 text-blue-400 text-xs hover:text-white">
-        สำหรับเจ้าหน้าที่
-      </button>
+      <div class="mt-8 text-center text-blue-200"><p>เฉพาะผู้มีรายชื่อที่ได้รับอนุญาตเท่านั้น</p></div>
+      <button onclick="toggleAdminLogin()" class="absolute bottom-4 left-4 text-blue-400 text-xs hover:text-white">สำหรับเจ้าหน้าที่</button>
     </div>
     
     <div class="md:w-1/2 bg-white flex flex-col justify-center items-center p-8">
       <div class="w-full max-w-md">
-        
         <div id="studentLoginBox">
           <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">เข้าสู่ระบบ (นักเรียน)</h3>
           <form onsubmit="handleLogin(event, 'student')" class="space-y-4">
-            <div>
-              <label class="block text-gray-700 mb-2">เลขบัตรประจำตัวประชาชน</label>
-              <input type="text" id="loginIdCard" maxlength="13" required 
-                     class="w-full p-4 border border-gray-300 rounded-lg text-xl text-center tracking-widest"
-                     placeholder="กรอกเลข 13 หลัก">
-            </div>
-            <button type="submit" id="btnLoginStudent" class="w-full bg-blue-900 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-800 transition">
-              ตรวจสอบสิทธิ์และสมัคร
-            </button>
+            <input type="text" id="loginIdCard" maxlength="13" required class="w-full p-4 border rounded-lg text-xl text-center tracking-widest" placeholder="เลขบัตร 13 หลัก">
+            <button type="submit" id="btnLoginStudent" class="w-full bg-blue-900 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-800">ตรวจสอบสิทธิ์</button>
           </form>
         </div>
-
         <div id="adminLoginBox" class="hidden">
           <h3 class="text-2xl font-bold text-red-800 mb-6 text-center">เข้าสู่ระบบ (เจ้าหน้าที่)</h3>
           <form onsubmit="handleLogin(event, 'admin')" class="space-y-4">
-            <div>
-              <label class="block text-gray-700 mb-2">Username</label>
-              <input type="text" id="adminUser" value="admin" readonly class="w-full p-3 bg-gray-100 rounded border">
-            </div>
-            <div>
-              <label class="block text-gray-700 mb-2">Password</label>
-              <input type="password" id="adminPass" required class="w-full p-3 border rounded">
-            </div>
-            <button type="submit" id="btnLoginAdmin" class="w-full bg-red-800 text-white py-3 rounded-lg font-bold hover:bg-red-700">
-              เข้าสู่ระบบ Admin
-            </button>
-            <button type="button" onclick="toggleAdminLogin()" class="w-full text-gray-500 mt-2 text-sm">กลับไปหน้าหลัก</button>
+            <input type="password" id="adminPass" required class="w-full p-3 border rounded" placeholder="Password">
+            <button type="submit" id="btnLoginAdmin" class="w-full bg-red-800 text-white py-3 rounded-lg font-bold hover:bg-red-700">Login</button>
+            <button type="button" onclick="toggleAdminLogin()" class="w-full text-gray-500 mt-2 text-sm">กลับ</button>
           </form>
         </div>
+      </div>
+    </div>
+  </div>
 
+  <div id="adminSection" class="hidden min-h-screen bg-gray-100 p-6">
+    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
+      <div class="bg-gray-800 text-white p-4 flex justify-between items-center">
+        <h2 class="text-xl font-bold">Admin Dashboard</h2>
+        <button onclick="location.reload()" class="bg-red-600 px-3 py-1 rounded text-sm hover:bg-red-700">ออกจากระบบ</button>
+      </div>
+
+      <div class="flex border-b">
+        <div onclick="switchTab('applicants')" id="tab-applicants" class="tab-btn active">📄 รายชื่อผู้สมัคร</div>
+        <div onclick="switchTab('whitelist')" id="tab-whitelist" class="tab-btn text-gray-500">⚙️ จัดการสิทธิ์ (Whitelist)</div>
+      </div>
+
+      <div id="view-applicants" class="p-6">
+        <h3 class="font-bold text-lg mb-4">รายการใบสมัครทั้งหมด</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse border">
+            <thead class="bg-gray-100">
+              <tr><th class="p-2 border">เวลา</th><th class="p-2 border">เลขบัตร</th><th class="p-2 border">ชื่อ-สกุล</th><th class="p-2 border">PDF</th></tr>
+            </thead>
+            <tbody id="adminTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="view-whitelist" class="p-6 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <div>
+            <h3 class="font-bold text-lg mb-2 text-blue-800">อัปเดตรายชื่อผู้มีสิทธิ์</h3>
+            <p class="text-sm text-gray-600 mb-2">ก๊อปปี้ข้อมูลจาก Excel (คอลัมน์ A=เลขบัตร, B=ชื่อ) มาวางที่นี่</p>
+            <textarea id="whitelistInput" class="w-full h-64 p-3 border rounded font-mono text-sm bg-gray-50" placeholder="1234567890123	ด.ช.รักดี เรียนเก่ง&#10;9876543210987	ด.ญ.มานะ อดทน"></textarea>
+            <div class="flex gap-2 mt-2">
+              <button onclick="saveWhitelist()" id="btnSaveWhitelist" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 font-bold">บันทึกข้อมูลทับของเดิม</button>
+              <button onclick="document.getElementById('whitelistInput').value=''" class="bg-gray-300 px-4 py-2 rounded">ล้างช่อง</button>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 p-4 rounded border">
+            <h3 class="font-bold text-lg mb-2">รายชื่อในระบบปัจจุบัน</h3>
+            <div class="overflow-y-auto h-64 bg-white border rounded">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-200 sticky top-0">
+                  <tr><th class="p-2">เลขบัตร</th><th class="p-2">ชื่อ-สกุล</th></tr>
+                </thead>
+                <tbody id="whitelistTableBody">
+                  <tr><td colspan="2" class="p-4 text-center text-gray-400">กำลังโหลด...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="text-right text-xs text-gray-500 mt-1">จำนวนทั้งหมด: <span id="whitelistCount">0</span> คน</p>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>
 
   <div id="formSection" class="hidden p-4 md:p-8 max-w-5xl mx-auto">
-    <div class="bg-white p-6 md:p-10 rounded-xl shadow-xl">
-      <div class="flex justify-between items-center mb-6 border-b pb-4">
-        <h2 class="text-2xl font-bold text-blue-900">แบบฟอร์มใบสมัคร</h2>
-        <button onclick="location.reload()" class="text-red-600 underline">ออกจากระบบ</button>
-      </div>
-      
-      <form id="appForm" onsubmit="submitForm(event)">
-         <div class="text-center p-10 bg-gray-50 border border-dashed border-gray-400">
-            (พื้นที่วางโค้ดฟอร์ม Standard Form จากรอบที่แล้ว) <br>
-            <input type="hidden" id="idCard"> </div>
-         <button type="submit" id="btnSubmit" class="w-full bg-blue-900 text-white font-bold py-4 rounded-lg mt-4">บันทึกข้อมูล</button>
-      </form>
-
-    </div>
-  </div>
-
-  <div id="adminSection" class="hidden p-6 max-w-6xl mx-auto">
-    <div class="bg-white p-8 rounded-xl shadow-xl">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">จัดการข้อมูลผู้สมัคร</h2>
-        <button onclick="location.reload()" class="bg-gray-500 text-white px-4 py-2 rounded">ออกจากระบบ</button>
-      </div>
-      
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-gray-200 text-gray-700">
-              <th class="p-3 border">เวลาสมัคร</th>
-              <th class="p-3 border">เลขบัตร</th>
-              <th class="p-3 border">ชื่อ-สกุล</th>
-              <th class="p-3 border">ใบสมัคร (PDF)</th>
-            </tr>
-          </thead>
-          <tbody id="adminTableBody">
-            </tbody>
-        </table>
-      </div>
-    </div>
+     <div class="bg-white p-10 rounded shadow-lg text-center">
+        <h2 class="text-2xl font-bold mb-4">แบบฟอร์มใบสมัคร</h2>
+        <p class="text-gray-500">(วางโค้ดฟอร์มที่นี่)</p>
+        <form id="appForm" onsubmit="submitForm(event)">
+           <input type="hidden" id="idCard">
+           <button type="submit" id="btnSubmit" class="bg-blue-900 text-white px-6 py-2 rounded mt-4">บันทึกตัวอย่าง</button>
+        </form>
+     </div>
   </div>
 
   <script>
-    // 🔴🔴🔴 ใส่ URL ตรงนี้ 🔴🔴🔴
+    // 🔴🔴🔴 URL ของคุณ 🔴🔴🔴
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtWZwXSFcbdrrPZSLrs4kmEDYB4fqx3MxUs0Wo40lgkAyIi_6C-j0AJ3YZgWOBJ16AHw/exec'; 
+
+    let currentWhitelist = [];
 
     function toggleAdminLogin() {
       document.getElementById('studentLoginBox').classList.toggle('hidden');
       document.getElementById('adminLoginBox').classList.toggle('hidden');
     }
 
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('view-applicants').classList.add('hidden');
+      document.getElementById('view-whitelist').classList.add('hidden');
+      
+      document.getElementById('tab-' + tab).classList.add('active');
+      document.getElementById('view-' + tab).classList.remove('hidden');
+    }
+
     function handleLogin(e, role) {
       e.preventDefault();
-      
       let payload = { action: 'login' };
       let btn;
 
       if (role === 'student') {
-        const id = document.getElementById('loginIdCard').value;
-        if(id.length !== 13) { alert('เลขบัตรไม่ครบ 13 หลัก'); return; }
-        payload.idCard = id;
+        payload.idCard = document.getElementById('loginIdCard').value;
         btn = document.getElementById('btnLoginStudent');
       } else {
         payload.idCard = 'admin';
         payload.password = document.getElementById('adminPass').value;
         btn = document.getElementById('btnLoginAdmin');
       }
-
+      
       btn.innerText = 'กำลังตรวจสอบ...'; btn.disabled = true;
 
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      })
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
       .then(res => res.json())
       .then(json => {
-        if (json.error) {
-           alert('❌ ' + json.error);
-        } else {
-           // Login สำเร็จ
-           document.getElementById('loginSection').classList.add('hidden');
-           
-           if (json.role === 'admin') {
-             // โชว์หน้า Admin
-             document.getElementById('adminSection').classList.remove('hidden');
-             renderAdminTable(json.data);
-           } else {
-             // โชว์หน้า Student Form
-             document.getElementById('formSection').classList.remove('hidden');
-             document.getElementById('idCard').value = payload.idCard; // ล็อคเลขบัตร
-             
-             if (json.found) {
-               alert('✅ พบข้อมูลเดิม ระบบดึงข้อมูลมาให้แล้ว');
-               populateForm(json.data); // ฟังก์ชันเดิมที่ใช้ดึงข้อมูลลงฟอร์ม
-             } else {
-               alert('✅ เข้าสู่ระบบสำเร็จ กรุณากรอกข้อมูลให้ครบถ้วน');
-             }
-           }
-        }
+         if (json.error) { alert('❌ ' + json.error); return; }
+         
+         document.getElementById('loginSection').classList.add('hidden');
+         
+         if (json.role === 'admin') {
+            document.getElementById('adminSection').classList.remove('hidden');
+            renderApplicants(json.data);
+            renderWhitelist(json.whitelist); // แสดง Whitelist ที่ดึงมา
+         } else {
+            document.getElementById('formSection').classList.remove('hidden');
+            document.getElementById('idCard').value = payload.idCard;
+            if(json.found) { alert('พบข้อมูลเดิม'); /* เรียกฟังก์ชัน populateForm(json.data) */ }
+         }
       })
-      .catch(err => alert('เชื่อมต่อไม่ได้: ' + err))
-      .finally(() => { btn.innerText = 'เข้าสู่ระบบ'; btn.disabled = false; });
+      .catch(err => alert('Error: ' + err))
+      .finally(() => { btn.innerText = (role==='student'?'ตรวจสอบสิทธิ์':'Login'); btn.disabled = false; });
     }
 
-    function renderAdminTable(data) {
-      const tbody = document.getElementById('adminTableBody');
+    // ฟังก์ชันจัดการ Whitelist
+    function renderWhitelist(list) {
+      currentWhitelist = list || [];
+      const tbody = document.getElementById('whitelistTableBody');
+      document.getElementById('whitelistCount').innerText = currentWhitelist.length;
       tbody.innerHTML = '';
-      if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">ยังไม่มีผู้สมัคร</td></tr>'; return; }
-
-      data.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.className = "border-b hover:bg-gray-50";
-        tr.innerHTML = `
-          <td class="p-3">${new Date(row.timestamp).toLocaleString('th-TH')}</td>
-          <td class="p-3">${row.idCard}</td>
-          <td class="p-3">${row.name}</td>
-          <td class="p-3">
-             <a href="${row.pdfUrl}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1">
-               📄 เปิดดู PDF
-             </a>
-          </td>
-        `;
-        tbody.appendChild(tr);
+      
+      if(currentWhitelist.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" class="p-2 text-center">ไม่มีข้อมูล</td></tr>'; return;
+      }
+      
+      currentWhitelist.forEach(item => {
+        tbody.innerHTML += `<tr class="border-b"><td class="p-2 font-mono">${item.id}</td><td class="p-2">${item.name}</td></tr>`;
       });
     }
 
-    // ฟังก์ชัน submitForm และ populateForm (ใช้โค้ดเดิมจากรอบที่แล้วได้เลยครับ)
-    // ...
+    function saveWhitelist() {
+      const text = document.getElementById('whitelistInput').value;
+      if(!text.trim()) { alert('กรุณาวางข้อมูลก่อน'); return; }
+
+      const lines = text.trim().split('\n');
+      const newList = [];
+      
+      // แปลงข้อความที่วาง (แยกด้วย Tab หรือ เว้นวรรค)
+      lines.forEach(line => {
+         // แยกด้วย Tab (กรณี Excel) หรือ Space
+         let parts = line.split(/\t/); 
+         if(parts.length < 2) parts = line.split(/ +/); // ถ้าไม่มี Tab ลองแยกด้วย Space
+         
+         if(parts.length >= 1) {
+            let id = parts[0].trim();
+            let name = parts.length > 1 ? parts[1].trim() : '-';
+            if(id) newList.push({ id: id, name: name });
+         }
+      });
+
+      if(newList.length === 0) { alert('รูปแบบข้อมูลไม่ถูกต้อง'); return; }
+      if(!confirm(`ยืนยันการบันทึกข้อมูล ${newList.length} รายชื่อ?\n(ข้อมูลเก่าจะถูกล้างทั้งหมด)`)) return;
+
+      const btn = document.getElementById('btnSaveWhitelist');
+      btn.innerText = 'กำลังบันทึก...'; btn.disabled = true;
+
+      fetch(SCRIPT_URL, {
+         method: 'POST',
+         body: JSON.stringify({ action: 'updateWhitelist', listData: newList })
+      })
+      .then(res => res.json())
+      .then(json => {
+         if(json.success) {
+            alert('✅ บันทึกเรียบร้อย!');
+            renderWhitelist(newList); // อัปเดตตารางฝั่งขวา
+            document.getElementById('whitelistInput').value = ''; // ล้างช่อง
+         } else {
+            alert('Error: ' + json.error);
+         }
+      })
+      .finally(() => { btn.innerText = 'บันทึกข้อมูลทับของเดิม'; btn.disabled = false; });
+    }
+
+    function renderApplicants(data) {
+       // ... (โค้ดเดิมสำหรับแสดงรายชื่อผู้สมัคร) ...
+       const tbody = document.getElementById('adminTableBody');
+       tbody.innerHTML = data.map(r => `
+         <tr class="border-b">
+           <td class="p-2">${new Date(r.timestamp).toLocaleDateString('th-TH')}</td>
+           <td class="p-2">${r.idCard}</td>
+           <td class="p-2">${r.name}</td>
+           <td class="p-2"><a href="${r.pdfUrl}" target="_blank" class="text-blue-600">PDF</a></td>
+         </tr>
+       `).join('');
+    }
+
+    function submitForm(e) {
+       // ... (โค้ด submitForm เดิม) ...
+    }
   </script>
 </body>
 </html>
