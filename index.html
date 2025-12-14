@@ -3,20 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบรับสมัครนักเรียน (Login Fix)</title>
+  <title>ระบบรับสมัครนักเรียน (Modern Import)</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
   <style>
     body { font-family: 'Sarabun', sans-serif; }
     .hidden { display: none !important; }
+
+    /* Custom Input Style */
     .input-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #1e3a8a; }
-    .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
+    .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; transition: all 0.2s; }
+    .input-group input:focus, .input-group select:focus { border-color: #2563eb; ring: 2px; outline: none; }
     .section-head { background: #e0f2fe; padding: 10px; font-weight: bold; color: #0c4a6e; border-left: 4px solid #0284c7; margin-top: 20px; margin-bottom: 10px; }
-    .tab-btn { padding: 12px 24px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: bold; color: #64748b; }
-    .tab-btn.active { border-bottom-color: #1e3a8a; color: #1e3a8a; background: #f1f5f9; }
-    .filter-btn { padding: 6px 12px; border-radius: 20px; border: 1px solid #ccc; cursor: pointer; font-size: 0.9rem; }
+
+    /* Admin Tabs */
+    .tab-btn { padding: 12px 24px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: bold; color: #64748b; transition: all 0.2s; }
+    .tab-btn.active { border-bottom-color: #1e3a8a; color: #1e3a8a; background: #f1f5f9; border-radius: 8px 8px 0 0; }
+    
+    /* Filters */
+    .filter-btn { padding: 6px 16px; border-radius: 20px; border: 1px solid #ccc; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+    .filter-btn:hover { background-color: #f3f4f6; }
     .filter-btn.active { background-color: #1e3a8a; color: white; border-color: #1e3a8a; }
+
+    /* --- ✨ New Import UI Styles --- */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+
+    /* Custom Scrollbar for Table */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Drag & Drop State */
+    .drag-active {
+      background-color: #eff6ff !important; /* blue-50 */
+      border-color: #3b82f6 !important; /* blue-500 */
+      transform: scale(1.01);
+      box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1);
+    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -25,38 +58,54 @@
     <div class="md:w-1/2 bg-blue-900 flex flex-col justify-center items-center text-white p-10 relative">
       <h1 class="text-4xl font-bold mb-4">ระบบรับสมัครนักเรียน</h1>
       <h2 class="text-2xl opacity-90">โรงเรียนบางสะพานวิทยา</h2>
-      <button onclick="toggleAdminLogin()" class="absolute bottom-4 left-4 text-blue-300 text-xs hover:text-white underline">
-        สลับโหมดเข้าระบบ (นักเรียน / เจ้าหน้าที่)
+      <div class="mt-8 text-blue-200 text-center text-sm">
+        <p>กรุณาเตรียมบัตรประชาชนเพื่อตรวจสอบสิทธิ์</p>
+      </div>
+      <button onclick="toggleAdminLogin()" class="absolute bottom-4 left-4 text-blue-300 text-xs hover:text-white underline transition">
+        สลับโหมดผู้ใช้งาน (นักเรียน / เจ้าหน้าที่)
       </button>
     </div>
     
     <div class="md:w-1/2 bg-white flex flex-col justify-center items-center p-8">
       <div class="w-full max-w-md">
         
-        <div id="studentLoginBox">
-          <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">นักเรียน: ตรวจสอบสิทธิ์</h3>
-          <form onsubmit="handleLogin(event, 'student')" class="space-y-4">
+        <div id="studentLoginBox" class="animate-fade-in-up">
+          <div class="text-center mb-8">
+            <h3 class="text-2xl font-bold text-gray-800">นักเรียน: ตรวจสอบสิทธิ์</h3>
+            <p class="text-gray-500 text-sm mt-1">กรอกเลขประจำตัวประชาชน 13 หลัก</p>
+          </div>
+          <form onsubmit="handleLogin(event, 'student')" class="space-y-5">
             <div>
-               <label class="block text-sm text-gray-600 mb-1">เลขประจำตัวประชาชน</label>
-               <input type="text" id="loginIdCard" maxlength="13" required class="w-full p-4 border rounded-lg text-xl text-center tracking-widest bg-gray-50 focus:bg-white transition" placeholder="เลข 13 หลัก">
+               <input type="text" id="loginIdCard" maxlength="13" required 
+                      class="w-full p-4 border border-gray-300 rounded-xl text-2xl text-center tracking-[0.2em] font-mono focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all placeholder-gray-300" 
+                      placeholder="0000000000000">
             </div>
-            <button type="submit" id="btnLoginStudent" class="w-full bg-blue-900 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-800 shadow-lg">เข้าสู่ระบบ</button>
+            <button type="submit" id="btnLoginStudent" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-800 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+              เข้าสู่ระบบ
+            </button>
           </form>
         </div>
 
-        <div id="adminLoginBox" class="hidden">
-          <h3 class="text-2xl font-bold text-red-800 mb-6 text-center">เจ้าหน้าที่: เข้าสู่ระบบ</h3>
-          <form onsubmit="handleLogin(event, 'admin')" class="space-y-4 border p-6 rounded-lg shadow-sm">
+        <div id="adminLoginBox" class="hidden animate-fade-in-up">
+          <div class="text-center mb-8">
+            <h3 class="text-2xl font-bold text-red-800">เจ้าหน้าที่: เข้าสู่ระบบ</h3>
+            <p class="text-gray-500 text-sm mt-1">สำหรับผู้ดูแลระบบเท่านั้น</p>
+          </div>
+          <form onsubmit="handleLogin(event, 'admin')" class="space-y-4 border border-gray-100 p-6 rounded-2xl shadow-sm bg-white">
             <div>
-               <label class="block font-bold text-gray-700">ชื่อผู้ใช้ (Username)</label>
-               <input type="text" id="adminUser" class="w-full p-3 border rounded focus:border-red-500" placeholder="ระบุชื่อผู้ใช้ (admin)">
+               <label class="block font-bold text-gray-700 text-sm mb-1">ชื่อผู้ใช้ (Username)</label>
+               <input type="text" id="adminUser" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-100 focus:border-red-500" placeholder="admin">
             </div>
             <div>
-               <label class="block font-bold text-gray-700">รหัสผ่าน (Password)</label>
-               <input type="password" id="adminPass" class="w-full p-3 border rounded focus:border-red-500" placeholder="ระบุรหัสผ่าน">
+               <label class="block font-bold text-gray-700 text-sm mb-1">รหัสผ่าน (Password)</label>
+               <input type="password" id="adminPass" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-100 focus:border-red-500" placeholder="••••••••">
             </div>
-            <button type="submit" id="btnLoginAdmin" class="w-full bg-red-800 text-white py-3 rounded-lg font-bold hover:bg-red-700 mt-2">ยืนยันการเข้าระบบ</button>
-            <button type="button" onclick="toggleAdminLogin()" class="w-full text-gray-500 mt-2 text-sm text-center">กลับไปหน้านักเรียน</button>
+            <button type="submit" id="btnLoginAdmin" class="w-full bg-red-800 text-white py-3 rounded-lg font-bold hover:bg-red-700 mt-2 shadow-md transition-all">
+              ยืนยันการเข้าระบบ
+            </button>
+            <button type="button" onclick="toggleAdminLogin()" class="w-full text-gray-400 mt-4 text-xs hover:text-gray-600">
+              ← กลับไปหน้านักเรียน
+            </button>
           </form>
         </div>
 
@@ -64,109 +113,199 @@
     </div>
   </div>
 
-  <div id="adminSection" class="hidden min-h-screen p-4 md:p-8">
-    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden min-h-[85vh]">
-      <div class="bg-gray-800 text-white p-5 flex justify-between items-center">
-        <h2 class="text-2xl font-bold">⚙️ Admin Dashboard</h2>
-        <button onclick="location.reload()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm">ออกจากระบบ</button>
+  <div id="adminSection" class="hidden min-h-screen p-4 md:p-8 bg-gray-100">
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[85vh] flex flex-col">
+      <div class="bg-gray-800 text-white p-6 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+           <div class="bg-gray-700 p-2 rounded-lg">⚙️</div>
+           <div>
+             <h2 class="text-xl font-bold">Admin Dashboard</h2>
+             <p class="text-xs text-gray-400">ระบบจัดการฐานข้อมูลผู้สมัคร</p>
+           </div>
+        </div>
+        <button onclick="location.reload()" class="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-lg text-sm font-bold transition-colors">ออกจากระบบ</button>
       </div>
 
-      <div class="flex border-b bg-gray-50">
+      <div class="flex border-b bg-gray-50 px-6 pt-4 gap-4">
         <div onclick="switchTab('applicants')" id="tab-applicants" class="tab-btn active">📄 รายชื่อผู้สมัคร</div>
         <div onclick="switchTab('import')" id="tab-import" class="tab-btn">📥 นำเข้าข้อมูล (Excel)</div>
       </div>
 
-      <div id="view-applicants" class="p-6">
-        <div class="flex flex-wrap gap-2 mb-4 items-center">
-          <span class="font-bold mr-2">ตัวกรอง:</span>
-          <button onclick="applyFilter('all')" class="filter-btn active" id="filter-all">ทั้งหมด</button>
-          <button onclick="applyFilter('M1')" class="filter-btn" id="filter-M1">เฉพาะ ม.1</button>
-          <button onclick="applyFilter('M4')" class="filter-btn" id="filter-M4">เฉพาะ ม.4</button>
+      <div id="view-applicants" class="p-8 flex-grow">
+        <div class="flex flex-wrap justify-between items-center mb-6">
+          <h3 class="font-bold text-xl text-gray-800">รายการใบสมัคร</h3>
+          <div class="flex gap-2">
+             <button onclick="applyFilter('all')" class="filter-btn active" id="filter-all">ทั้งหมด</button>
+             <button onclick="applyFilter('M1')" class="filter-btn" id="filter-M1">เฉพาะ ม.1</button>
+             <button onclick="applyFilter('M4')" class="filter-btn" id="filter-M4">เฉพาะ ม.4</button>
+          </div>
         </div>
-        <div class="overflow-x-auto border rounded-lg">
+        
+        <div class="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
           <table class="w-full text-left border-collapse">
-            <thead class="bg-blue-50 text-blue-900 uppercase text-sm">
-              <tr><th class="p-3 border-b">ระดับ</th><th class="p-3 border-b">เลขบัตร</th><th class="p-3 border-b">ชื่อ-สกุล</th><th class="p-3 border-b text-center">จัดการ</th></tr>
+            <thead class="bg-blue-50 text-blue-900 uppercase text-xs font-bold tracking-wider">
+              <tr>
+                <th class="p-4 border-b">ระดับชั้น</th>
+                <th class="p-4 border-b">เลขบัตรประชาชน</th>
+                <th class="p-4 border-b">ชื่อ-สกุล</th>
+                <th class="p-4 border-b text-center">จัดการ</th>
+              </tr>
             </thead>
-            <tbody id="adminTableBody" class="bg-white text-sm"></tbody>
+            <tbody id="adminTableBody" class="bg-white text-sm divide-y divide-gray-100">
+              </tbody>
           </table>
         </div>
       </div>
 
-      <div id="view-import" class="p-6 hidden">
-         <div class="text-center p-10 border-2 border-dashed rounded bg-gray-50">
-           <p class="mb-4 font-bold text-gray-600">อัปโหลดไฟล์ Excel (.xlsx) เพื่อกำหนดสิทธิ์ (Whitelist)</p>
-           <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="handleFileUpload(event)">
-           <div class="mt-4" id="previewArea"></div>
-           <button id="btnConfirmImport" onclick="confirmImport()" class="hidden bg-green-600 text-white px-6 py-2 rounded mt-4 font-bold shadow">ยืนยันการนำเข้า</button>
-         </div>
+      <div id="view-import" class="p-8 hidden flex-grow bg-gray-50">
+        <div class="max-w-4xl mx-auto">
+          
+          <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-800">นำเข้าฐานข้อมูลผู้มีสิทธิ์ (Whitelist)</h2>
+            <p class="text-gray-500 text-sm mt-1">อัปโหลดไฟล์ Excel (.xlsx) เพื่อกำหนดรายชื่อ</p>
+          </div>
+
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+            <div 
+              id="dropZone"
+              class="relative border-2 border-dashed border-blue-300 rounded-xl p-10 text-center hover:bg-blue-50 transition-all duration-300 group cursor-pointer"
+              onclick="document.getElementById('excelFile').click()"
+              ondragover="handleDragOver(event)"
+              ondragleave="handleDragLeave(event)"
+              ondrop="handleDrop(event)"
+            >
+              <input type="file" id="excelFile" class="hidden" accept=".xlsx, .xls" onchange="handleFileUpload(event)">
+              <div class="flex flex-col items-center justify-center space-y-4">
+                <div class="bg-blue-100 p-4 rounded-full group-hover:scale-110 transition-transform">
+                   <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                </div>
+                <div>
+                  <p class="text-lg font-semibold text-gray-700">คลิกเพื่อเลือกไฟล์ หรือ ลากไฟล์มาวางที่นี่</p>
+                  <p class="text-sm text-gray-400 mt-1">คอลัมน์ A=เลขบัตร, B=ชื่อ</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="previewSection" class="hidden animate-fade-in-up">
+            <div class="flex justify-between items-end mb-3 px-1">
+               <h3 class="font-bold text-gray-700 flex items-center gap-2">
+                 ตัวอย่างข้อมูล <span id="previewCountBadge" class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">0</span>
+               </h3>
+               <button onclick="clearImport()" class="text-xs text-red-500 hover:underline">ล้างค่า</button>
+            </div>
+            
+            <div class="bg-white border rounded-xl shadow-lg overflow-hidden flex flex-col h-[400px]">
+               <div class="overflow-y-auto flex-grow custom-scrollbar">
+                 <table class="w-full text-left border-collapse">
+                   <thead class="bg-gray-100 sticky top-0 z-10 shadow-sm">
+                     <tr>
+                       <th class="p-3 text-xs font-bold text-gray-500 w-16 text-center">#</th>
+                       <th class="p-3 text-xs font-bold text-gray-500">ID Card</th>
+                       <th class="p-3 text-xs font-bold text-gray-500">Name</th>
+                       <th class="p-3 text-xs font-bold text-gray-500 text-center w-20">Status</th>
+                     </tr>
+                   </thead>
+                   <tbody id="previewTableBody" class="divide-y divide-gray-100 text-sm"></tbody>
+                 </table>
+               </div>
+               <div class="bg-gray-50 p-4 border-t flex justify-between items-center">
+                 <span class="text-xs text-gray-400">* ข้อมูลเก่าจะถูกแทนที่ทั้งหมด</span>
+                 <button id="btnConfirmImport" onclick="confirmImport()" class="bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold shadow hover:bg-green-700 transition transform hover:-translate-y-0.5">
+                    ✅ ยืนยันการนำเข้า
+                 </button>
+               </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>
 
   <div id="formSection" class="hidden p-4 md:p-8 max-w-5xl mx-auto">
-    <div class="bg-white p-6 md:p-10 rounded-xl shadow-xl relative">
+    <div class="bg-white p-6 md:p-10 rounded-2xl shadow-2xl relative border border-gray-200">
       
-      <div id="adminEditHeader" class="hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 flex justify-between items-center">
-        <div>
-           <p class="font-bold">⚠️ โหมดแก้ไขข้อมูล (Admin)</p>
-           <p class="text-sm">กำลังแก้ไขข้อมูลของ: <span id="editingName" class="font-bold">-</span></p>
+      <div id="adminEditHeader" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+           <div class="bg-yellow-100 p-2 rounded-full text-yellow-600">📝</div>
+           <div>
+              <p class="font-bold text-yellow-800">โหมดแก้ไขข้อมูล (Admin)</p>
+              <p class="text-sm text-yellow-600">กำลังแก้ไข: <span id="editingName" class="font-bold underline">-</span></p>
+           </div>
         </div>
-        <button onclick="closeAdminEdit()" class="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600">ยกเลิก / กลับ</button>
+        <button onclick="closeAdminEdit()" class="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 font-bold">ยกเลิก / กลับ</button>
       </div>
 
-      <div class="flex justify-between items-center mb-6 border-b pb-4">
-        <div><h2 class="text-2xl font-bold text-blue-900">แบบฟอร์มใบสมัคร</h2></div>
-        <button id="btnStudentLogout" onclick="location.reload()" class="text-red-600 underline">ออกจากระบบ</button>
+      <div class="flex justify-between items-center mb-8 pb-4 border-b">
+        <div>
+           <h2 class="text-3xl font-bold text-blue-900">แบบฟอร์มใบสมัคร</h2>
+           <p class="text-gray-500 mt-1">โรงเรียนบางสะพานวิทยา</p>
+        </div>
+        <button id="btnStudentLogout" onclick="location.reload()" class="text-red-500 hover:text-red-700 font-medium text-sm flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+          ออกจากระบบ
+        </button>
       </div>
 
       <form id="appForm" onsubmit="submitForm(event)">
-        <div class="bg-blue-50 p-4 rounded mb-6 border border-blue-200">
-           <label class="font-bold text-lg text-blue-900 mb-2 block">สมัครเข้าเรียนระดับชั้น</label>
-           <select id="applyLevel" class="w-full md:w-1/3 p-2 border rounded-lg text-lg font-bold" required>
-              <option value="">-- กรุณาเลือก --</option>
-              <option value="ม.1">มัธยมศึกษาปีที่ 1</option>
-              <option value="ม.4">มัธยมศึกษาปีที่ 4</option>
-           </select>
+        <div class="bg-blue-50 p-6 rounded-xl mb-8 border border-blue-100">
+           <label class="font-bold text-xl text-blue-900 mb-3 block">สมัครเข้าเรียนระดับชั้น</label>
+           <div class="relative">
+             <select id="applyLevel" class="w-full md:w-1/3 p-3 pl-4 border border-blue-200 rounded-lg text-lg font-bold text-blue-800 bg-white focus:ring-2 focus:ring-blue-400 outline-none appearance-none" required>
+                <option value="">-- กรุณาเลือก --</option>
+                <option value="ม.1">มัธยมศึกษาปีที่ 1</option>
+                <option value="ม.4">มัธยมศึกษาปีที่ 4</option>
+             </select>
+             <div class="pointer-events-none absolute inset-y-0 left-[30%] flex items-center px-2 text-gray-700">▼</div>
+           </div>
         </div>
 
-        <div class="section-head">1. ข้อมูลการสมัคร</div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="section-head rounded">1. ข้อมูลการสมัคร</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
           <div class="input-group"><label>สถานะพื้นที่บริการ</label><select id="serviceArea"><option>อยู่ในเขตพื้นที่บริการ</option><option>อยู่นอกเขตพื้นที่บริการ</option></select></div>
           <div class="input-group"><label>แผนการเรียน</label><select id="program"><option>วิทย์-คณิต</option><option>ศิลป์-คำนวณ</option><option>ศิลป์-ภาษา</option><option>ทั่วไป</option></select></div>
-          <div class="input-group md:col-span-2"><label>โรงเรียนเดิม</label><input type="text" id="oldSchool"></div>
+          <div class="input-group md:col-span-2"><label>โรงเรียนเดิม</label><input type="text" id="oldSchool" placeholder="ชื่อโรงเรียนที่จบมา"></div>
         </div>
 
-        <div class="section-head">2. ข้อมูลส่วนตัว</div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-           <div class="input-group md:col-span-2"><label>เลขบัตรประชาชน</label><input id="idCard" readonly class="bg-gray-200 text-gray-500 cursor-not-allowed"></div>
+        <div class="section-head rounded">2. ข้อมูลส่วนตัว</div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
+           <div class="input-group md:col-span-2"><label>เลขบัตรประชาชน</label><input id="idCard" readonly class="bg-gray-100 text-gray-500 cursor-not-allowed font-mono tracking-wider"></div>
            <div class="input-group"><label>คำนำหน้า</label><select id="prefix"><option>ด.ช.</option><option>ด.ญ.</option><option>นาย</option><option>น.ส.</option></select></div>
            <div class="input-group"><label>ชื่อ</label><input id="name"></div>
            <div class="input-group"><label>นามสกุล</label><input id="surname"></div>
            <div class="input-group"><label>เบอร์โทร</label><input id="phoneReg"></div>
-        </div>
+           </div>
 
-        <div class="mt-8 flex gap-4">
-           <button type="submit" id="btnSubmit" class="flex-1 bg-blue-900 text-white font-bold py-4 rounded-lg hover:bg-blue-800 text-xl shadow-lg">บันทึกข้อมูล</button>
-           <a id="btnDownloadPDF" href="#" target="_blank" class="hidden flex-1 bg-green-600 text-white font-bold py-4 rounded-lg hover:bg-green-700 text-xl shadow-lg text-center flex items-center justify-center">🖨️ พิมพ์ PDF</a>
+        <div class="flex gap-4 pt-4 border-t">
+           <button type="submit" id="btnSubmit" class="flex-1 bg-blue-900 text-white font-bold py-4 rounded-xl hover:bg-blue-800 text-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+             บันทึกข้อมูล
+           </button>
+           
+           <a id="btnDownloadPDF" href="#" target="_blank" class="hidden flex-1 bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-700 text-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-center flex items-center justify-center gap-2">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+              พิมพ์ PDF
+           </a>
         </div>
       </form>
     </div>
   </div>
 
   <script>
-    // 🔴🔴 ใส่ URL ของคุณที่นี่ 🔴🔴
+    // ==========================================
+    // 🔴🔴 ใส่ URL ของคุณตรงนี้ 🔴🔴
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtWZwXSFcbdrrPZSLrs4kmEDYB4fqx3MxUs0Wo40lgkAyIi_6C-j0AJ3YZgWOBJ16AHw/exec'; 
+    // ==========================================
 
     let allApplicants = [];
     let isAdminMode = false;
     let tempImportData = [];
 
+    // --- UTILS ---
     function toggleAdminLogin() {
       document.getElementById('studentLoginBox').classList.toggle('hidden');
       document.getElementById('adminLoginBox').classList.toggle('hidden');
     }
-
     function switchTab(tabName) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById('view-applicants').classList.add('hidden');
@@ -175,60 +314,50 @@
       document.getElementById('view-' + tabName).classList.remove('hidden');
     }
 
-    // --- MAIN LOGIN FUNCTION ---
+    // --- LOGIN ---
     function handleLogin(e, role) {
       e.preventDefault();
-      
       let payload = { action: 'login' };
       let btn;
-
+      
       if (role === 'student') {
-        // นักเรียน: ส่งเลขบัตรไปที่ช่อง username
         payload.username = document.getElementById('loginIdCard').value;
-        payload.password = ''; // ไม่ใช้รหัสผ่าน
+        payload.password = '';
         btn = document.getElementById('btnLoginStudent');
       } else {
-        // แอดมิน: ส่งทั้ง User และ Pass
         payload.username = document.getElementById('adminUser').value;
         payload.password = document.getElementById('adminPass').value;
         btn = document.getElementById('btnLoginAdmin');
       }
 
-      if(!payload.username) { alert('กรุณาระบุข้อมูลให้ครบถ้วน'); return; }
+      if(!payload.username) { alert('กรุณาระบุข้อมูล'); return; }
       
-      btn.innerText = 'กำลังตรวจสอบ...'; btn.disabled = true;
+      const originalText = btn.innerText;
+      btn.innerText = '⏳ กำลังตรวจสอบ...'; btn.disabled = true;
 
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      })
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
       .then(res => res.json())
       .then(json => {
-        if (json.error) {
-           alert('❌ ผิดพลาด: ' + json.error);
-        } else {
-           document.getElementById('loginSection').classList.add('hidden');
-           
-           if (json.role === 'admin') {
-              document.getElementById('adminSection').classList.remove('hidden');
-              allApplicants = json.data;
-              renderApplicants(allApplicants);
-           } else {
-              isAdminMode = false;
-              document.getElementById('formSection').classList.remove('hidden');
-              document.getElementById('idCard').value = payload.username; // ตั้งค่าเลขบัตร
-              if(json.found) populateForm(json.data);
-           }
-        }
+         if (json.error) { alert('❌ ' + json.error); } 
+         else {
+            document.getElementById('loginSection').classList.add('hidden');
+            if (json.role === 'admin') {
+               document.getElementById('adminSection').classList.remove('hidden');
+               allApplicants = json.data;
+               renderApplicants(allApplicants);
+            } else {
+               isAdminMode = false;
+               document.getElementById('formSection').classList.remove('hidden');
+               document.getElementById('idCard').value = payload.username;
+               if(json.found) populateForm(json.data);
+            }
+         }
       })
-      .catch(err => alert('เชื่อมต่อระบบไม่ได้: ' + err))
-      .finally(() => { 
-         btn.innerText = (role==='student'?'เข้าสู่ระบบ':'ยืนยันการเข้าระบบ'); 
-         btn.disabled = false; 
-      });
+      .catch(err => alert('เชื่อมต่อไม่ได้: ' + err))
+      .finally(() => { btn.innerText = originalText; btn.disabled = false; });
     }
 
-    // --- ADMIN FILTER & RENDER ---
+    // --- ADMIN FILTER ---
     function applyFilter(level) {
        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
        document.getElementById('filter-' + level).classList.add('active');
@@ -239,27 +368,35 @@
     function renderApplicants(data) {
        const tbody = document.getElementById('adminTableBody');
        tbody.innerHTML = '';
-       if(!data.length) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">ไม่พบข้อมูล</td></tr>'; return; }
+       if(!data.length) { tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-gray-400">ไม่พบข้อมูลใบสมัคร</td></tr>'; return; }
        
        data.forEach((r, index) => {
-         // สร้างปุ่ม Edit โดยเชื่อมกับ Index ใน Array หลัก
          tbody.innerHTML += `
-           <tr class="border-b hover:bg-gray-50">
-             <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${r.level}</span></td>
-             <td class="p-3 font-mono text-gray-700">${r.idCard}</td>
-             <td class="p-3 font-bold">${r.name}</td>
-             <td class="p-3 text-center">
-                <button onclick="openAdminEdit(${index})" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 shadow">แก้ไข/ดู</button>
+           <tr class="hover:bg-blue-50 transition border-b last:border-0">
+             <td class="p-4"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${r.level}</span></td>
+             <td class="p-4 font-mono text-gray-700">${r.idCard}</td>
+             <td class="p-4 font-bold text-gray-800">${r.name}</td>
+             <td class="p-4 text-center">
+                <button onclick="openAdminEdit(${index})" class="bg-white border border-yellow-400 text-yellow-600 px-3 py-1 rounded-lg text-sm hover:bg-yellow-50 shadow-sm font-bold transition">
+                   📝 แก้ไข
+                </button>
              </td>
            </tr>
          `;
        });
     }
 
-    // --- EXCEL IMPORT ---
-    function handleFileUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+    // --- 🟢 NEW DRAG & DROP IMPORT ---
+    function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-active'); }
+    function handleDragLeave(e) { e.preventDefault(); document.getElementById('dropZone').classList.remove('drag-active'); }
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('dropZone').classList.remove('drag-active');
+      if (e.dataTransfer.files.length > 0) processFile(e.dataTransfer.files[0]);
+    }
+    function handleFileUpload(event) { if (event.target.files[0]) processFile(event.target.files[0]); }
+
+    function processFile(file) {
       const reader = new FileReader();
       reader.onload = function(e) {
         const data = new Uint8Array(e.target.result);
@@ -270,41 +407,80 @@
         jsonData.forEach(row => {
             let id = row[0] ? String(row[0]).trim() : '';
             let name = row[1] ? String(row[1]).trim() : '';
-            if (id.length >= 5) tempImportData.push({ id: id, name: name });
+            if (id.length >= 5 && !id.toLowerCase().includes('id')) { 
+               tempImportData.push({ id: id, name: name });
+            }
         });
-
-        const preview = document.getElementById('previewArea');
-        preview.innerHTML = `<p class="text-green-600 font-bold">พบข้อมูล ${tempImportData.length} รายการ</p>`;
-        if(tempImportData.length > 0) document.getElementById('btnConfirmImport').classList.remove('hidden');
+        renderNewPreview();
       };
       reader.readAsArrayBuffer(file);
     }
 
+    function renderNewPreview() {
+      const previewSection = document.getElementById('previewSection');
+      const tbody = document.getElementById('previewTableBody');
+      const countBadge = document.getElementById('previewCountBadge');
+      
+      previewSection.classList.remove('hidden');
+      countBadge.innerText = tempImportData.length;
+      tbody.innerHTML = '';
+
+      if (tempImportData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400">ไม่พบข้อมูลในไฟล์</td></tr>`;
+        document.getElementById('btnConfirmImport').classList.add('opacity-50', 'pointer-events-none');
+        return;
+      }
+
+      document.getElementById('btnConfirmImport').classList.remove('opacity-50', 'pointer-events-none');
+      
+      const displayLimit = tempImportData.slice(0, 100); 
+      displayLimit.forEach((item, idx) => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-blue-50 border-b">
+            <td class="p-3 text-center text-gray-400 font-mono text-xs">${idx + 1}</td>
+            <td class="p-3 font-mono font-bold text-blue-700">${item.id}</td>
+            <td class="p-3 text-gray-700">${item.name || '-'}</td>
+            <td class="p-3 text-center"><span class="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">OK</span></td>
+          </tr>
+        `;
+      });
+      if(tempImportData.length > 100) tbody.innerHTML += `<tr><td colspan="4" class="p-3 text-center text-xs text-gray-500 bg-gray-50">...และอีก ${tempImportData.length-100} รายการ...</td></tr>`;
+    }
+
+    function clearImport() {
+       document.getElementById('excelFile').value = '';
+       document.getElementById('previewSection').classList.add('hidden');
+       tempImportData = [];
+    }
+
     function confirmImport() {
-      if(!confirm(`ยืนยันการนำเข้า ${tempImportData.length} รายชื่อ? (ของเดิมจะถูกลบ)`)) return;
+      if(!confirm(`ยืนยันการนำเข้า ${tempImportData.length} รายชื่อ?\n(รายชื่อเก่าจะถูกล้าง)`)) return;
+      const btn = document.getElementById('btnConfirmImport');
+      btn.innerText = '⏳ กำลังอัปโหลด...';
+      
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateWhitelist', listData: tempImportData }) })
       .then(res => res.json())
       .then(json => {
-         if(json.success) { alert('✅ นำเข้าข้อมูลสำเร็จ'); location.reload(); }
+         if(json.success) { alert('✅ นำเข้าสำเร็จ'); clearImport(); }
          else alert('Error: ' + json.error);
-      });
+      })
+      .finally(() => btn.innerText = '✅ ยืนยันการนำเข้า');
     }
 
-    // --- FORM EDITING ---
+    // --- FORM LOGIC ---
     function openAdminEdit(index) {
        isAdminMode = true;
-       const data = allApplicants[index].fullData; 
+       const data = allApplicants[index].fullData;
        
        document.getElementById('adminSection').classList.add('hidden');
        document.getElementById('formSection').classList.remove('hidden');
        document.getElementById('adminEditHeader').classList.remove('hidden');
-       
        document.getElementById('editingName').innerText = data.prefix + data.name + " " + data.surname;
        document.getElementById('btnStudentLogout').classList.add('hidden');
        
        const btnSub = document.getElementById('btnSubmit');
        btnSub.innerText = "บันทึกการแก้ไข (Admin)";
-       btnSub.classList.replace('bg-blue-900', 'bg-yellow-600');
+       btnSub.className = "flex-1 bg-yellow-500 text-white font-bold py-4 rounded-xl hover:bg-yellow-600 text-xl shadow-lg";
 
        populateForm(data);
 
@@ -312,9 +488,7 @@
        if (allApplicants[index].pdfUrl) {
           btnPDF.href = allApplicants[index].pdfUrl;
           btnPDF.classList.remove('hidden');
-       } else {
-          btnPDF.classList.add('hidden');
-       }
+       } else btnPDF.classList.add('hidden');
     }
 
     function closeAdminEdit() {
@@ -333,9 +507,11 @@
 
     function submitForm(e) {
       e.preventDefault();
-      document.getElementById('btnSubmit').disabled = true;
+      const btn = document.getElementById('btnSubmit');
+      btn.innerText = 'กำลังบันทึก...'; btn.disabled = true;
+
       let data = {};
-      document.querySelectorAll('input:not([type="checkbox"]), select').forEach(el => data[el.id] = el.value);
+      document.querySelectorAll('#appForm input:not([type="checkbox"]), #appForm select').forEach(el => data[el.id] = el.value);
 
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'save', data: data }) })
       .then(res => res.json())
@@ -343,14 +519,16 @@
          if(json.success) {
             alert('✅ บันทึกเรียบร้อย');
             if (isAdminMode) {
-               document.getElementById('btnDownloadPDF').href = json.url;
-               document.getElementById('btnDownloadPDF').classList.remove('hidden');
-            } else {
-               window.location.href = json.url;
-            }
-         } else { alert('Error: ' + json.error); }
+               const btnPDF = document.getElementById('btnDownloadPDF');
+               btnPDF.href = json.url;
+               btnPDF.classList.remove('hidden');
+            } else window.location.href = json.url;
+         } else alert('Error: ' + json.error);
       })
-      .finally(() => document.getElementById('btnSubmit').disabled = false);
+      .finally(() => { 
+         btn.innerText = isAdminMode ? 'บันทึกการแก้ไข (Admin)' : 'บันทึกข้อมูล'; 
+         btn.disabled = false; 
+      });
     }
   </script>
 </body>
